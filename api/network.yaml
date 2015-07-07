@@ -1,3 +1,5 @@
+base_url: 'http://127.0.0.1:9696'
+
 methods:
   - name: 'network_create'
     url: ['POST', 'v2.0/networks.json']

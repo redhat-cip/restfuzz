@@ -1,11 +1,26 @@
 Javago - an API wanderer
 ========================
 
+Features
+--------
+* Support REST json based API
+* Full description of methods inputs/outputs
+* Randomly generate inputs
+* Outputs/inputs of type ressources are collected and reused
+
+
 Todo
 ----
 * Current ressources collections before starting (using *_list methods)
 * Better method picking
-* ???
+* Parallel trace collection and health checks
+
+
+Demo
+----
+python demo/demo_server.py
+python javago.py demo/demo.yaml
+
 
 Usage
 -----
@@ -19,3 +34,12 @@ python javago.py ./api/ --debug
 * Fuzz session
 python javago.py ./api/ | tee javago-$(date '+%s').log
 
+
+Bugs reported
+-------------
+
+* https://bugs.launchpad.net/neutron/+bug/1471957
+* https://bugs.launchpad.net/neutron/+bug/1471959
+* https://bugs.launchpad.net/neutron/+bug/1471966
+* https://bugs.launchpad.net/neutron/+bug/1472242
+* https://bugs.launchpad.net/neutron/+bug/1472243

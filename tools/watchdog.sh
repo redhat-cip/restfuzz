@@ -20,8 +20,13 @@ neutron router-interface-add test ${SUB_ID}
 
 neutron security-group-rule-create --direction ingress --protocol ICMP default
 
-nova boot --image cirros --flavor 1 watchdog_vm
+nova boot --image cirros --flavor 1 --nic net-id=${NET_ID} watchdog_vm
 
 FLOATING=$(neutron floatingip-create public | grep 'floating_ip_address' | awk '{ print $4 }')
 nova floating-ip-associate watchdog_vm ${FLOATING}
 ping ${FLOATING}
+
+
+# ./tools/purge.sh
+# keystone tenant-delete ${TEST_USER}
+# keystone user-delete ${TEST_USER}

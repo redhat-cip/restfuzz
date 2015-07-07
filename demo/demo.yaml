@@ -1,0 +1,9 @@
+base_url: 'http://127.0.0.1:8080'
+
+methods:
+  - name: 'test'
+    url: ['POST', '']
+    inputs:
+      direction: {'required': True, 'type': 'net_direction'}
+    outputs:
+      port_id: {'json_extract': 'lambda x: x["port_id"]', 'type': 'ressource'}

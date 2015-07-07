@@ -34,31 +34,23 @@ print "Using seed %d" % seed
 # globals
 DEBUG="--debug" in sys.argv
 
-once_every = lambda number: random.randint(1, number) == number
-
 def debug(msg):
     print "\033[93m%s\033[0m" % msg
 
 class Api:
+    # Wrapper around requests
     headers = {'User-Agent': 'javago-0.1.0', 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    def __init__(self, token, services, tenant_id = None):
-        self.set_token(token)
-        self.services = services
-        self.tenant_id = tenant_id
+    def __init__(self, token = None):
+        if token:
+            self.set_token(token)
 
     def set_token(self, token):
         self.headers['X-Auth-Token'] = token
-
-    def get_endpoint(self, name):
-        return self.services[name]
 
     def request(self, method, endpoint, data):
         return requests.request(method, url = endpoint, headers = self.headers, data = data)
 
 class FakeApi:
-    tenant_id = None
-    def get_endpoint(self, name):
-        return "http://test"
     def request(self, method, endpoint, data):
         class FakeRequest:
             status_code = 200
@@ -68,6 +60,8 @@ class FakeApi:
 def walk_dict(data_set):
   # recursive generator of input definition from schema
   # yield input name, input description
+  if not isinstance(data_set, dict):
+      raise RuntimeError("%s: Missing type in input/output description" % data_set)
   for k,v in data_set.items():
     if 'type' in v:
         yield (k, v)
@@ -86,7 +80,6 @@ def find_input(data_set, input_name):
             if v:
                 return v
 
-
 class CallError(Exception):
     def __init__(self, code, error):
         self.code = code
@@ -97,9 +90,9 @@ class CallError(Exception):
         return self.__repr__()
 
 class Method:
-    def __init__(self, kwarg, service):
-        """ Create method object from yaml kwarg """
-        self.service = service
+    def __init__(self, kwarg, base_url):
+        # Create method object from yaml kwarg description
+        self.base_url = base_url
         self.name = kwarg['name']
         self.http_method = kwarg['url'][0]
         self.url = kwarg['url'][1]
@@ -124,7 +117,7 @@ class Method:
 
     def call(self, params, api):
         # Encode inputs
-        url = "%s/%s" % (api.get_endpoint(self.service), self.url)
+        url = "%s/%s" % (self.base_url, self.url)
         json_input = None
         if params:
             if "url_input" in params:
@@ -139,11 +132,13 @@ class Method:
 
         # Call
         t = time.time()
-        print "[%s.%03.0f] %s: curl -X %s %20s\t -d '%s'   # %s" % (
-                time.strftime("%Y-%m-%d %H:%M:%S"), (t - int(t))*1000, self.name, self.http_method, url, json_input, params)
+        prefix = "[%s.%03.0f]" % (time.strftime("%Y-%m-%d %H:%M:%S"), (t - int(t))*1000)
+        print "%s %s: curl -X %s %20s\t -d '%s'" % (
+                prefix, self.name, self.http_method, url, json_input
+        )
         resp = api.request(self.http_method, url, json_input)
 
-        # Encode outputs
+        # Extract outputs from method results according to method outputs description
         outputs = {}
         if resp.status_code >= 200 and resp.status_code < 300 and resp.text:
             json_output = resp.json()
@@ -154,18 +149,17 @@ class Method:
                     debug("Could not decode output [%s] with [%s] in '%s'" % (output, self.outputs[output], json_output))
 
         if resp.status_code >= 200 and resp.status_code < 300:
-            print "-> \033[92m%03s: %s\033[0m" % (resp.status_code, outputs)
+            print "%s -> \033[92m%03s: %s\033[0m" % (prefix, resp.status_code, outputs)
             return outputs
         else:
             if resp.status_code in (400, 404, 409):
-                print "-> \033[94m%03s: %s\033[0m" % (resp.status_code, resp.text)
+                print "%s -> \033[94m%03s: %s\033[0m" % (prefix, resp.status_code, resp.text)
             else:
-                print "-> \033[91m%03s: %s\033[0m" % (resp.status_code, resp.text)
+                print "%s -> \033[91m%03s: %s\033[0m" % (prefix, resp.status_code, resp.text)
             raise CallError(resp.status_code, resp.text)
 
     def __repr__(self):
         return "%s" % self.name
-        #return "%s_%s" % (self.service, self.name)
 
 class Graph:
     # Graph that connects method's outputs to method's inputs
@@ -208,8 +202,9 @@ class Graph:
         os.system("dot -o /tmp/test.png -Tpng /tmp/graph.dot; feh /tmp/test.png")
 
 
+once_every = lambda number: random.randint(1, number) == number
+
 class InputGenerator(object):
-    generator_list = []
     def __init__(self):
         self.generator_list = []
         for generator in dir(self):
@@ -232,7 +227,7 @@ class InputGenerator(object):
             is_list = not is_list
 
         if input_type not in self.generator_list:
-            raise RuntimeError("Unknown input type: %s" % (input_type))
+            raise RuntimeError("Missing generator for input type: %s" % (input_type))
             input_type = random.choice(self.generator_list)
         generator = self.__getattribute__("gen_%s" % input_type)
 
@@ -341,8 +336,7 @@ class InputGenerator(object):
             'nexthop': self.gen_ip()
         }
 
-generator = InputGenerator()
-input_generator = generator.generate_input
+input_generator = InputGenerator().generate_input
 
 
 # Random api walk with ressource management
@@ -355,7 +349,7 @@ class ApiRandomWalk:
         self.ressources = {}
         self.ressources_dtor = {}
         for m in methods:
-            for r in m.requires:
+            for r in m.requires.union(m.produces):
                 if r not in self.ressources:
                     self.ressources[r] = []
                 if m.http_method == 'DELETE':
@@ -379,17 +373,22 @@ class ApiRandomWalk:
         # Generate params
         call_params = {}
         def walk_inputs(data_set, params):
+            # For each input
             for input_name,v in data_set.items():
                 if 'type' not in v:
+                    # If not an input definition, recurse object
                     inputs = walk_inputs(v, {})
                     if inputs:
                         params[input_name] = inputs
                     continue
                 if v['type'] in ('ressource', 'list_ressource'):
+                    # If input type is ressources
                     ressource_name = v.setdefault('ressource_name', input_name)
                     if once_every(90):
+                        # Once in a while, generate random data
                         params[input_name] = input_generator()
                     else:
+                        # Or pick ressources already collected
                         if v['type'] == 'list_ressource':
                             l = []
                             r_list = list(self.ressources[ressource_name])
@@ -401,6 +400,7 @@ class ApiRandomWalk:
                             if self.ressources[ressource_name]:
                                 params[input_name] = random.choice(list(self.ressources[ressource_name]))
                 elif 'required' in v or once_every(5):
+                    # If input is required or once in a while, generate input type
                     params[input_name] = input_generator(v['type'])
             return params
         walk_inputs(method.inputs, call_params)
@@ -419,7 +419,6 @@ class ApiRandomWalk:
                     self.ressources[input_name].remove(inp)
 
     def step(self):
-        #method = random.choice(self.methods_list)
         random.shuffle(self.methods_list)
         # Pick a callable method
         for method in self.methods_list:
@@ -446,7 +445,7 @@ class ApiRandomWalk:
             #if e.code == 409:
             #    self.purge_ressources()
             if e.code == 401: # Authorization required... create a new token
-                token = os.popen("keystone token-get | grep ' id' | awk '{ print $4 }'").read().strip()
+                token, tenant_id = token_get()
                 self.api.set_token(token)
                 self.purge_ressources()
 
@@ -466,18 +465,24 @@ def load_methods(folder_or_file):
     methods = set()
     for fname in files:
         d = yaml.load(open(fname))
+        if "base_url" not in d:
+            raise RuntimeError("%s: missing base_url..." % fname)
         if "methods" not in d:
             raise RuntimeError("%s: missing methods list..." % fname)
         for method in d['methods']:
-            methods.add(Method(method, os.path.basename(fname[:-5])))
-
+            methods.add(Method(method, d['base_url']))
     return methods
+
+def token_get(self):
+    # Return (token, tenant_id)
+    token, tenant_id = os.popen("keystone token-get | grep ' id\|tenant_id' | awk '{ print $4 }'").read().strip().split()
 
 def main(argv):
     if len(argv) < 2 or "--help" in argv:
         print "usage: %s api_folder_or_file [--graph] [--debug] [--dry_run]"
         exit(1)
 
+    token, tenant_id = None, None
     methods = load_methods(argv[1])
 
     if "--graph" in argv:
@@ -488,27 +493,13 @@ def main(argv):
     if "--dry_run" in argv:
         api = FakeApi()
     else:
-        if "OS_USERNAME" not in os.environ:
-            print "Source openrc first..."
-            exit(1)
-        token, tenant_id = os.popen("keystone token-get | grep ' id\|tenant_id' | awk '{ print $4 }'").read().strip().split()
-        services = {}
-        for method in methods:
-            if method.service not in services:
-                services[method.service] = os.popen(
-                        "keystone catalog --service %s | grep 'publicURL' | awk '{ print $4 }'"
-                        % method.service
-                ).read().strip()
-        print "token = '%s'\ntenan_id = '%s'\nservices = %s" % (token, tenant_id, services)
-        api = Api(token, services, tenant_id)
-        h = []
-        for k,v in api.headers.items():
-            h.append("-H '%s:%s'" % (k,v))
-        print " ".join(h)
-        print
+        if "OS_USERNAME" in os.environ:
+            token, tenant_id = token_get()
+        api = Api(token)
 
     a = ApiRandomWalk(api, methods)
-    a.ressources['tenant_id'] = [api.tenant_id]
+    if tenant_id:
+        a.ressources['tenant_id'] = [tenant_id]
     try:
         idx = 0
         while True:
