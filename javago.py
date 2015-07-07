@@ -105,6 +105,8 @@ class Method:
         for k,v in walk_dict(self.inputs):
             if v['type'] in ('ressource', 'list_ressource'):
                 self.requires.add(v.setdefault('ressource_name', k))
+            # try to generate input to check for missing generators
+            input_generator(v['type'])
 
         for k,v in walk_dict(self.outputs):
             if v['type'] in ('ressource', 'list_ressource'):
