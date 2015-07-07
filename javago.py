@@ -473,9 +473,9 @@ def load_methods(folder_or_file):
             methods.add(Method(method, d['base_url']))
     return methods
 
-def token_get(self):
+def token_get():
     # Return (token, tenant_id)
-    token, tenant_id = os.popen("keystone token-get | grep ' id\|tenant_id' | awk '{ print $4 }'").read().strip().split()
+    return os.popen("keystone token-get | grep ' id\|tenant_id' | awk '{ print $4 }'").read().strip().split()
 
 def main(argv):
     if len(argv) < 2 or "--help" in argv:
