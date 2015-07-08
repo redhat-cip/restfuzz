@@ -1,6 +1,34 @@
 base_url: 'http://127.0.0.1:9696'
 
 methods:
+  - name: 'network_list'
+    url: ['GET', 'v2.0/networks.json']
+    outputs:
+      network_id: {'type': 'ressource', 'json_extract': 'lambda x: [i["id"] for i in x["networks"]]'}
+
+  - name: 'subnet_list'
+    url: ['GET', 'v2.0/subnets.json']
+    outputs:
+      subnet_id: {'type': 'ressource', 'json_extract': 'lambda x: [i["id"] for i in x["subnets"]]'}
+
+  - name: 'port_list'
+    url: ['GET', 'v2.0/ports.json']
+    outputs:
+      port_id: {'type': 'ressource', 'json_extract': 'lambda x: [i["id"] for i in x["ports"]]'}
+
+  - name: 'router_list'
+    url: ['GET', 'v2.0/routers.json']
+    outputs:
+      router_id: {'type': 'ressource', 'json_extract': 'lambda x: [i["id"] for i in x["routers"]]'}
+
+  - name: 'security_group_list'
+    url: ['GET', 'v2.0/security-groups.json']
+    outputs:
+      security_group_id: {'type': 'ressource', 'json_extract': 'lambda x: [i["id"] for i in x["security_groups"]]'}
+      security_group_rule_id: {'type': 'ressource', 'json_extract': 'lambda x: [j["id"] for j in list(itertools.chain.from_iterable([i["security_group_rules"] for i in x["security_groups"]]))]'}
+      # this unpack: {'security_groups': [{'security_group_rules': [{'id': 'aaaa-aa-aa'}, {'id': 'bbbb-bb-bb'}]}, {'security_group_rules': [{'id': 'cccc-cc-cc'}]}]}
+      # into: ['aaaa-aa-aa', 'bbbb-bb-bb', 'cccc-cc-cc']
+
   - name: 'network_create'
     url: ['POST', 'v2.0/networks.json']
     inputs:

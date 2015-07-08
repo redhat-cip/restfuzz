@@ -23,6 +23,7 @@ import random
 import time
 import uuid
 import string
+import itertools
 from pprint import pprint
 
 import requests
@@ -140,15 +141,24 @@ class Method:
         )
         resp = api.request(self.http_method, url, json_input)
 
-        # Extract outputs from method results according to method outputs description
         outputs = {}
         if resp.status_code >= 200 and resp.status_code < 300 and resp.text:
+            # Extract outputs from method results according to method outputs description
             json_output = resp.json()
             for output in self.outputs:
+                outputs[output] = []
+                o = None
                 try:
-                    outputs[output] = eval(self.outputs[output]['json_extract'])(json_output)
+                    o = eval(self.outputs[output]['json_extract'])(json_output)
                 except:
-                    debug("Could not decode output [%s] with [%s] in '%s'" % (output, self.outputs[output], json_output))
+                    debug("Could not decode output [%s] with [%s]" % (json_output, self.outputs[output]))
+                if not o:
+                    continue
+                if not isinstance(o, list):
+                    o = [o]
+                for i in o:
+                    outputs[output].append(i)
+
 
         if resp.status_code >= 200 and resp.status_code < 300:
             print "%s -> \033[92m%03s: %s\033[0m" % (prefix, resp.status_code, outputs)
@@ -249,6 +259,9 @@ class InputGenerator(object):
 
     def gen_net_protocol(self):
         return random.choice(("tcp", "icmp", "udp"))
+
+    def gen_ressource(self):
+        return self.gen_uuid()
 
     def gen_uuid(self):
         return str(uuid.uuid4())
@@ -357,6 +370,16 @@ class ApiRandomWalk:
                 if m.http_method == 'DELETE':
                     self.ressources_dtor[r] = m
 
+    def sync_ressources(self):
+        print "Syncing ressources..."
+        for r in self.ressources:
+            del self.ressources[r][:]
+        for m in self.methods:
+            if not m.name.endswith("_list"):
+                continue
+            # call each method and collect outputs
+            self.step(m, inputs={})
+
     def purge_ressource(self, ressource_name, ressource):
         print "Cleaning ressources %s: %s" % (ressource_name, ressource)
         try:
@@ -369,7 +392,8 @@ class ApiRandomWalk:
         for i in xrange(3):
             for ressource_name in self.ressources:
                 for ressource in self.ressources[ressource_name]:
-                    self.purge_ressource(ressource_name, ressource)
+                    if ressource_name in self.ressources_dtor:
+                        self.purge_ressource(ressource_name, ressource)
 
     def prepare_call(self, method):
         # Generate params
@@ -410,8 +434,10 @@ class ApiRandomWalk:
 
     def process_output(self, method, inputs, outputs):
         # Adds output to ressources
-        for output in outputs:
-            self.ressources[output].append(outputs[output])
+        for k,v in outputs.items():
+            for ressource in v:
+                if ressource not in self.ressources[k]:
+                    self.ressources[k].append(ressource)
 
         # Remove destroyed ressources
         if method.http_method == 'DELETE':
@@ -420,18 +446,20 @@ class ApiRandomWalk:
                 if inp in self.ressources[input_name]:
                     self.ressources[input_name].remove(inp)
 
-    def step(self):
-        random.shuffle(self.methods_list)
-        # Pick a callable method
-        for method in self.methods_list:
-            if method.http_method != 'DELETE' or once_every(200):
-                break
+    def step(self, method = None, inputs = None):
+        if not method:
+            random.shuffle(self.methods_list)
+            # Pick a callable method
+            for method in self.methods_list:
+                if (method.http_method != 'DELETE' and not method.name.endswith('_list')) or once_every(200):
+                    break
 
 
         if DEBUG:
             raw_input("--------------------------- Press enter to call %s " % method)
         try:
-            inputs = self.prepare_call(method)
+            if inputs == None:
+                inputs = self.prepare_call(method)
             outputs = method.call(inputs, self.api)
             self.process_output(method, inputs, outputs)
         except CallError, e:
@@ -449,7 +477,6 @@ class ApiRandomWalk:
             if e.code == 401: # Authorization required... create a new token
                 token, tenant_id = token_get()
                 self.api.set_token(token)
-                self.purge_ressources()
 
         sys.stdout.flush()
 
@@ -505,13 +532,12 @@ def main(argv):
     try:
         idx = 0
         while True:
-            a.step()
             if idx % 1024 == 0:
+                a.sync_ressources()
                 print "Current ressources", a.ressources
+            a.step()
             idx += 1
     except:
-        print "\nAborting..."
-        a.purge_ressources()
         print "Done."
         raise
 
