@@ -125,7 +125,10 @@ class Method:
         if params:
             if "url_input" in params:
                 url_input = params['url_input']
-                url = url % params['url_input']
+                try:
+                    url = url % params['url_input']
+                except KeyError:
+                    pass
                 del params['url_input']
                 if params:
                     json_input = json.dumps(params)
@@ -222,6 +225,8 @@ class InputGenerator(object):
         for generator in dir(self):
             if generator.startswith('gen_'):
                 self.generator_list.append(generator[4:])
+        self.last_age = 0
+        self.last_record = self.gen_record_type()
 
     def generate_input(self, input_type = None):
         # Once in a while, switch generator
@@ -250,6 +255,81 @@ class InputGenerator(object):
         else:
             result = generator()
         return result
+
+    def gen_record_type(self):
+        if self.last_age > 0:
+            self.last_age -= 1
+        else:
+            self.last_record = random.choice([u'A', u'AAAA', u'CNAME', u'MX', u'TXT', u'SPF', u'SRV', u'PTR', u'SSHFP', u'SOA', u'NS'])
+            self.last_age = 5
+        return self.last_record
+
+    def gen_record_name(self):
+        return self.gen_domain()[:-1]
+
+    def gen_mx(self):
+        return "10 mail1.example.org."
+
+    def gen_soa(self):
+        return "ns2.example.com. joe.example.org. 1414180785 3600 600 86400 3600"
+
+    def gen_record(self):
+        valid_record = {
+            "A": self.gen_ipv4,
+            "AAAA": self.gen_ipv6,
+            "CNAME": self.gen_hostname,
+            "PTR": self.gen_hostname,
+            "NS": self.gen_domain,
+            "MX": self.gen_mx,
+            "TXT": self.gen_string,
+            "SPF": lambda : "v=spf1 +all",
+            "SRV": lambda : "10 0 5060 server1.example.org.",
+            "SSHFP": lambda : "1 2 aa2df857dc65c5359f02ca75ec5c4308c0100594d931e8d243a42f586257b5e8",
+            "SOA": self.gen_soa,
+        }
+        if self.last_record in valid_record:
+            g = valid_record[self.last_record]
+        else:
+            g = random.choice(valid_record.values())
+        if once_every(50):
+            g = random.choice(valid_record.values())
+        record = list(g())
+        if once_every(50):
+            random.shuffle(record)
+        return "".join(record)
+
+    def gen_zone_type(self):
+        return random.choice([u'PRIMARY', u'SECONDARY'])
+
+    def gen_regex(self):
+        return self.gen_string()
+
+    def gen_hostname(self):
+        if once_every(2):
+            return self.gen_ip()
+        else:
+            return self.gen_domain()[:-1]
+
+    def gen_integer(self):
+        return int(random.random() * 2**64)
+
+    def gen_domain(self):
+        domain = []
+        for i in xrange(0, random.randint(0, 5)):
+            domain.append(
+                ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(random.randint(1, 30)))
+            )
+            domain.append(".")
+        domain.append(''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(random.randint(1, 5))))
+        domain.append('.')
+        return "".join(domain)
+
+    def gen_mail(self):
+        return "%s@%s" % (
+                ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(random.randint(1, 30))),
+                self.gen_domain()[:-1]
+            )
+
 
     def gen_ethertype(self):
         return random.choice(("IPv4", "IPv6"))
@@ -353,7 +433,6 @@ class InputGenerator(object):
 
 input_generator = InputGenerator().generate_input
 
-
 # Random api walk with ressource management
 class ApiRandomWalk:
     def __init__(self, api, methods):
@@ -454,7 +533,6 @@ class ApiRandomWalk:
                 if (method.http_method != 'DELETE' and not method.name.endswith('_list')) or once_every(200):
                     break
 
-
         if DEBUG:
             raw_input("--------------------------- Press enter to call %s " % method)
         try:
@@ -477,8 +555,10 @@ class ApiRandomWalk:
             if e.code == 401: # Authorization required... create a new token
                 token, tenant_id = token_get()
                 self.api.set_token(token)
+            return e.code
 
         sys.stdout.flush()
+        return 200
 
 
 def load_methods(folder_or_file):

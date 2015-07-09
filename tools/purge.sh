@@ -5,6 +5,11 @@ for instance in $(nova list | awk '{ print $2 }' | grep -- -); do
     nova delete $instance
 done
 
+for domain in $(designate domain-list | awk '{ print $2 }' | grep -- -); do
+    designate domain-delete $domain
+done
+
+
 export OS_TOKEN=$(keystone token-get | grep ' id ' | awk '{ print $4}')
 export OS_URL=http://localhost:9696/
 

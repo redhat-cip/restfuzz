@@ -29,6 +29,9 @@ def dump_traceback(output_dir, in_file, tb_column):
         tb.append(l2[tb_column:-1])
     tb.append(l[tb_column:])
 
+    if len(tb) < 2:
+        return l
+
     # Compute hash
     tb_hash = []
     for t in map(lambda x: x.split(), tb):
