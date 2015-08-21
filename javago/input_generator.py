@@ -88,8 +88,17 @@ class InputGenerator(object):
     def gen_domain(self):
         return "%s." % self.generate_input("hostname")
 
+    def gen_byte(self):
+        return int(random.random() * 2 ** 8)
+
+    def gen_short(self):
+        return int(random.random() * 2 ** 16)
+
     def gen_integer(self):
         return int(random.random() * 2 ** 64)
+
+    def gen_volume_status(self):
+        return random.choice(('creating', 'available', 'attaching', 'in-use', 'deleting', 'error', 'error_deleting', 'backing-up', 'restoring-backup', 'error_restoring', 'error_extending'))
 
     def gen_hostname(self):
         domain = []
@@ -308,7 +317,7 @@ class InputGenerator(object):
                 self.resource_add(resource_name, resource)
 
     def resource_remove(self, resource_name, resource):
-        if resource_name not in self.resources:
+        if resource_name not in self.resources or resource_name == "tenant_id":
             return
         try:
             self.resources[resource_name].remove(resource)

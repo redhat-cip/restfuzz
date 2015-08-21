@@ -41,7 +41,10 @@ class ApiRandomCaller:
 
     def sync_resources(self):
         # Refresh internal resources list
+        tenant_id = self.ig.resources.setdefault('tenant_id', None)
         self.ig.resources_clear()
+        if tenant_id:
+            self.ig.resources["tenant_id"] = tenant_id
         for name, method in self.methods.items():
             if not name.endswith("_list"):
                 continue

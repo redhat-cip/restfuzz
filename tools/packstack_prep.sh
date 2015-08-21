@@ -32,7 +32,7 @@ done
 yum remove -y "*neutron*"
 rm -Rf /var/log/neutron
 yum install -y openstack-packstack php mod_wsgi
-packstack --allinone --os-swift-install=n --os-ceilometer-install=n --os-cinder-install=n --nagios-install=n --provision-demo=n
+packstack --allinone --os-swift-install=n --os-ceilometer-install=n --nagios-install=n --provision-demo=n
 cp /root/keystonerc_admin /home/
 chown 1000 /home/keystonerc_admin
 
