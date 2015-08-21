@@ -1,0 +1,134 @@
+base_url: 'http://127.0.0.1:9292'
+
+methods:
+  - name: 'image_list'
+    url: ['GET', 'v2/images']
+    outputs:
+      image_id: {'json_extract': 'lambda x: [i["id"] for i in x["images"]]', 'type': 'resource'}
+
+  - name: 'image_create'
+    url: ['POST', 'v2/images']
+    inputs:
+      name: {'type': 'string'}
+      image_id: {'type': 'resource'}
+      visibility: {'type': 'visibility'}
+      container_format: {'type': 'container_format'}
+      disk_format: {'type': 'disk_format'}
+      min_disk: {'type': 'integer'}
+      min_ram: {'type': 'integer'}
+      #protected: {'type': 'bool'}
+      properties: {'type': 'dict'}
+      tags: {'type': 'dict'}
+    outputs:
+      image_id: {'json_extract': 'lambda x: x["id"]', 'type': 'resource'}
+
+  - name: 'image_update'
+    url: ['PATH', 'v2/images/%(image_id)s']
+    inputs:
+      url_input:
+        image_id: {'type', 'resource', 'required': 'True'}
+      path: {'type': 'string'}
+      value: {'type': 'string'}
+      op: {'type': 'patch_operation'}
+      url: {'type': 'string'}
+      metadata: {'type': 'dict'}
+
+  - name: 'image_deactivate'
+    url: ['POST', 'v2/images/%(image_id)s/actions/deactivate']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+
+  - name: 'image_reactivaate'
+    url: ['POST', 'v2/images/%(image_id)s/actions/reactivate']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+
+  - name: 'image_delete'
+    url: ['DELETE', 'v2/images/%(image_id)s']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+
+  - name: 'image_put_data'
+    url: ['PUT', 'v2/images/%(image_id)s/file']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+      raw_data: {'type': 'string'}
+
+  - name: 'image_tag_add'
+    url: ['PUT', 'v2/images/%(image_id)s/tags/%(tag_id)s']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+        tag_id: {'type': 'string', 'required': 'True'}
+
+  - name: 'image_tag_delete'
+    url: ['DELETE', 'v2/images/%(image_id)s/tags/%(tag_id)s']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+        tag_id: {'type': 'string', 'required': 'True'}
+
+
+  - name: 'image_member_create'
+    url: ['POST', 'v2/images/%(image_id)s/members']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+      member: {'type': 'resource', 'resource_name': 'tenant_id'}
+
+  - name: 'image_members_list'
+    url: ['GET', 'v2/images/%(image_id)s/members']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+    outputs:
+      tenant_id: {'type': 'resource', 'json_extract': 'lambda x: [i["member_id"] for i in x["members"]]'}
+
+  - name: 'image_member_delete'
+    url: ['DELETE', 'v2/images/%(image_id)s/members/%(tenant_id)s']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'type': 'resource', 'required': 'True'}
+
+  - name: 'image_member_update'
+    url: ['PUT', 'v2/images/%(image_id)s/members/%(tenant_id)s']
+    inputs:
+      url_input:
+        image_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'type': 'resource', 'required': 'True'}
+      status: {'type': 'image_status'}
+
+  - name: 'image_resource_type_create'
+    url: ['POST', 'v2/metadefs/namespaces/%(namespace)s/resource_types']
+    inputs:
+      url_input:
+        namespace: {'type': 'string', 'required': 'True'}
+      name: {'type': 'string', 'required': 'True'}
+      prefix: {'type': 'string'}
+      properties_target: {'type': 'string'}
+
+  - name: 'image_namespace_create'
+    url: ['POST', 'v2/metadefs/namespaces']
+    inputs:
+      namespace: {'type': 'string', 'required': 'True'}
+      display_name: {'type': 'string'}
+      description: {'type': 'string'}
+      visibility: {'type': 'visibility'}
+      #protected: {'type': 'bool'}
+      properties: {'type': 'dict'}
+      objects: {'type': 'dict'}
+      resource_type_associations : {'type': 'dict'}
+
+  - name: 'image_task_create'
+    url: ['POST', 'v2/tasks']
+
+#  - name: 'image_task_list'
+#    url: ['GET', 'v2/tasks']
+#    outputs:
+#      task_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["tasks"]]'}
+

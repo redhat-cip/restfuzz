@@ -1,0 +1,12 @@
+*.swp
+*.egg-info
+*.egg
+*.py[co]
+*~
+.venv
+.tox
+/.coverage
+/.eggs
+/build
+AUTHORS
+ChangeLog

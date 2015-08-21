@@ -1,38 +1,43 @@
-Javago - an API wanderer
-========================
+Javago - an API tester
+======================
 
 Features
 --------
 * Support REST json based API
-* Full description of methods inputs/outputs
+* Requires a description of methods inputs/outputs
 * Randomly generate inputs
-* Outputs/inputs of type ressources are collected and reused
+* Outputs/inputs of type resources are collected and reused
+* Health monitoring extract traceback from logs
+
+Usage example
+-------------
+
+This unit test output shows example of randomly generated api call. A fake API is used, no actual request is performed::
+
+  $ python javago/tests/test_fuzzer.py
+
+A demo server and description is also included::
+
+  $ python demo/demo_server.py
+  $ javago --api demo/demo.yaml
+
+A typical fuzzing session goes like this:
+
+  $ ./tools/packstack_prep.sh
+  $ javago --api ./api/network.yaml --health ./tools/health_neutron.py --db ./samples/neutron_$(date '+%s')
+  ... ^C
+  $ ./tools/read_dump.py --stats ./samples/neutron_*
+  # Based on the method that always failed, or weird return code
+  $ ./tools/read_dump.py --name faulty_method ./samples/neutron_*
+  # Returns all the call from this method
+
+  # Looks for inconsistent cloud behavior using another account and then
+  $ ./tools/read_dump.py ./samples/* | grep "bad_uuid"
 
 
 Todo
 ----
-* Current ressources collections before starting (using *_list methods)
-* Better method picking
-* Parallel trace collection and health checks
-
-
-Demo
-----
-python demo/demo_server.py
-python javago.py demo/demo.yaml
-
-
-Usage
------
-
-* Draw graph of methods from api description:
-python javago.py ./api/network.yaml --graph
-
-* Dry-run step by step test:
-python javago.py ./api/ --debug
-
-* Fuzz session
-python javago.py ./api/ | tee javago-$(date '+%s').log
+* includes https://github.com/minimaxir/big-list-of-naughty-strings
 
 
 Bugs reported
@@ -46,3 +51,6 @@ Bugs reported
 
 * https://bugs.launchpad.net/designate/+bug/1473210
 * https://bugs.launchpad.net/designate/+bug/1473212
+* https://bugs.launchpad.net/designate/+bug/1473518
+
+* https://bugs.launchpad.net/neutron/+bug/1486565

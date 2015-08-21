@@ -15,14 +15,14 @@ NET_ID=$(neutron net-create test | grep ' id ' | awk '{ print $4 }')
 SUB_ID=$(neutron subnet-create --enable-dhcp ${NET_ID} 192.168.42.1/24 | grep ' id ' | awk '{ print $4 }')
 
 neutron router-create test
-neutron router-gateway-set test public
+neutron router-gateway-set test external_network
 neutron router-interface-add test ${SUB_ID}
 
 neutron security-group-rule-create --direction ingress --protocol ICMP default
 
 nova boot --image cirros --flavor 1 --nic net-id=${NET_ID} watchdog_vm
 
-FLOATING=$(neutron floatingip-create public | grep 'floating_ip_address' | awk '{ print $4 }')
+FLOATING=$(neutron floatingip-create external_network | grep 'floating_ip_address' | awk '{ print $4 }')
 nova floating-ip-associate watchdog_vm ${FLOATING}
 ping ${FLOATING}
 

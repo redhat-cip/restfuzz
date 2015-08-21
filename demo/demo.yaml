@@ -1,9 +1,22 @@
 base_url: 'http://127.0.0.1:8080'
 
 methods:
-  - name: 'test'
-    url: ['POST', '']
-    inputs:
-      direction: {'required': True, 'type': 'net_direction'}
+  - name: 'port_list'
+    url: ['GET', 'demo/']
     outputs:
-      port_id: {'json_extract': 'lambda x: x["port_id"]', 'type': 'ressource'}
+      port_id: {'json_extract': 'lambda x: [i["id"] for i in x]', 'type': 'resource'}
+
+  - name: 'port_create'
+    url: ['PUT', 'demo/%(port_name)s']
+    inputs:
+      url_input:
+        port_name: {'type': 'string', 'required': 'True'}
+    outputs:
+      port_id: {'json_extract': 'lambda x: x["id"]', 'type': 'resource'}
+
+  - name: 'port_update'
+    url: ['POST', 'demo/%(port_id)s']
+    inputs:
+      url_input:
+        port_id: {'type': 'resource', 'required': 'True'}
+      records: {'type': 'record'}

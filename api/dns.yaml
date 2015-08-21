@@ -1,12 +1,12 @@
-base_url: 'http://10.43.97.3:9001'
+base_url: 'http://127.0.0.1:9001'
 
 methods:
   - name: 'zone_list'
     url: ['GET', 'v2/zones']
     outputs:
-      zone_id: {'json_extract': 'lambda x: [i["id"] for i in x["zones"]]', 'type': 'ressource'}
-      pool_id: {'json_extract': 'lambda x: [i["pool_id"] for i in x["zones"]]', 'type': 'ressource'}
-      zone_name_id: {'json_extract': 'lambda x: [i["name"] for i in x["zones"]]', 'type': 'ressource'}
+      zone_id: {'json_extract': 'lambda x: [i["id"] for i in x["zones"]]', 'type': 'resource'}
+      pool_id: {'json_extract': 'lambda x: [i["pool_id"] for i in x["zones"]]', 'type': 'resource'}
+      domain_name: {'json_extract': 'lambda x: [i["name"] for i in x["zones"]]', 'type': 'resource'}
 
   - name: 'zone_create'
     url: ['POST', 'v2/zones']
@@ -18,74 +18,76 @@ methods:
       type: {'type': 'zone_type'}
       masters: {'type': 'list_hostname'}
     outputs:
-      zone_id: {'json_extract': 'lambda x: x["id"]', 'type': 'ressource'}
-      pool_id: {'json_extract': 'lambda x: x["pool_id"]', 'type': 'ressource'}
-      zone_name_id: {'json_extract': 'lambda x: x["name"]', 'type': 'ressource'}
+      zone_id: {'json_extract': 'lambda x: x["id"]', 'type': 'resource'}
+      pool_id: {'json_extract': 'lambda x: x["pool_id"]', 'type': 'resource'}
+      domain_name: {'json_extract': 'lambda x: x["name"]', 'type': 'resource'}
 
   - name: 'zone_update'
     url: ['PATCH', 'v2/zones/%(zone_id)s']
     inputs:
       url_input:
-        zone_id: {'required': True, 'type': 'ressource'}
+        zone_id: {'required': True, 'type': 'resource'}
       email: {'required': 'True', 'type': 'mail'}
       description: {'type': 'string'}
       ttl: {'type': 'integer'}
+      type: {'type': 'zone_type'}
       masters: {'type': 'list_hostname'}
 
   - name: 'zone_delete'
     url: ['DELETE', 'v2/zones/%(zone_id)s']
     inputs:
       url_input:
-        zone_id: {'required': True, 'type': 'ressource'}
+        zone_id: {'required': True, 'type': 'resource'}
 
   - name: 'zone_transfer_create'
     url: ['POST', 'v2/zones/%(zone_id)s/tasks/transfer_requests']
     inputs:
       url_input:
-        zone_id: {'required': True, 'type': 'ressource'}
+        zone_id: {'required': True, 'type': 'resource'}
       description: {'type': 'string'}
-      target_project_id: {'type': 'ressource', 'ressource_name': 'tenant_id'}
+      target_project_id: {'type': 'resource', 'resource_name': 'tenant_id'}
     outputs:
-      zone_transfer_id: {'json_extract': 'lambda x: x["id"]', 'type': 'ressource'}
-      zone_transfer_key: {'json_extract': 'lambda x: x["key"]', 'type': 'ressource'}
+      zone_transfer_id: {'json_extract': 'lambda x: x["id"]', 'type': 'resource'}
+      zone_transfer_key: {'json_extract': 'lambda x: x["key"]', 'type': 'resource'}
 
   - name: 'zone_transfer_list'
     url: ['GET', 'v2/zones/tasks/transfer_requests']
     outputs:
-      zone_transfer_id: {'json_extract': 'lambda x: [i["id"] for i in x["transfer_requests"]]', 'type': 'ressource'}
-      zone_transfer_key: {'json_extract': 'lambda x: [i["key"] for i in x["transfer_requests"]]', 'type': 'ressource'}
+      zone_transfer_id: {'json_extract': 'lambda x: [i["id"] for i in x["transfer_requests"]]', 'type': 'resource'}
+      zone_transfer_key: {'json_extract': 'lambda x: [i["key"] for i in x["transfer_requests"]]', 'type': 'resource'}
 
   - name: 'zone_transfer_accept'
     url: ['POST', 'v2/zones/tasks/transfer_accepts']
     inputs:
-      key: {'type': 'ressource', 'ressource_name': 'zone_transfer_key'}
-      zone_transfer_request_id: {'type': 'ressource', 'ressource_name': 'zone_transfer_id'}
+      key: {'type': 'resource', 'resource_name': 'zone_transfer_key'}
+      zone_transfer_request_id: {'type': 'resource', 'resource_name': 'zone_transfer_id'}
 
 
   - name: 'record_create'
     url: ['POST', 'v2/zones/%(zone_id)s/recordsets']
     inputs:
       url_input:
-        zone_id: {'required': True, 'type': 'ressource'}
-      name: {'required': 'True', 'type': 'ressource', 'ressource_name': 'zone_name_id'}
+        zone_id: {'required': True, 'type': 'resource'}
+      #name: {'required': 'True', 'type': 'resource', 'resource_name': 'zone_name_id'}
       description: {'type': 'string'}
-      records: {'required': 'True', 'type': 'list_record'}
+      records: {'required': 'True', 'type': 'record', 'expand': 'True'}
+      #records: {'required': 'True', 'type': 'list_record'}
       ttl: {'type': 'integer'}
-      type: {'required': 'True', 'type': 'record_type'}
+      #type: {'required': 'True', 'type': 'record_type'}
     outputs:
-      record_id: {'json_extract': 'lambda x: x["id"]', 'type': 'ressource'}
+      record_id: {'json_extract': 'lambda x: x["id"]', 'type': 'resource'}
 
   - name: 'record_update'
     url: ['PUT', 'v2/zones/%(zone_id)s/recordsets/%(record_id)s']
     inputs:
       url_input:
-        zone_id: {'required': True, 'type': 'ressource'}
-        record_id: {'required': True, 'type': 'ressource'}
-      name: {'required': 'True', 'type': 'ressource', 'ressource_name': 'zone_name_id'}
-      description: {'type': 'string'}
-      records: {'required': 'True', 'type': 'list_record'}
-      ttl: {'type': 'integer'}
-      type: {'type': 'record_type'}
+        zone_id: {'required': True, 'type': 'resource'}
+        record_id: {'required': True, 'type': 'resource'}
+      #name: {'required': 'True', 'type': 'resource', 'resource_name': 'zone_name_id'}
+      #description: {'type': 'string'}
+      #records: {'required': 'True', 'type': 'list_record'}
+      #ttl: {'type': 'integer'}
+      #type: {'type': 'record_type'}
 
 #  - name: 'blacklist_create'
 #    url: ['POST', 'v2/blacklists']
@@ -93,13 +95,13 @@ methods:
 #      description: {'type': 'string'}
 #      pattern: {'type': 'regex'}
 #    outputs:
-#      blacklist_id: {'json_extract': 'lambda x: x["id"]', 'type': 'ressource'}
+#      blacklist_id: {'json_extract': 'lambda x: x["id"]', 'type': 'resource'}
 #
 #  - name: 'blacklist_update'
 #    url: ['PATCH', 'v2/blacklists/%(blacklist_id)s']
 #    inputs:
 #      url_input:
-#        blacklist_id: {'required': 'True', 'type': 'ressource'}
+#        blacklist_id: {'required': 'True', 'type': 'resource'}
 #      description: {'type': 'string'}
 #      pattern: {'type': 'regex'}
 #
@@ -107,10 +109,10 @@ methods:
 #    url: ['DELETE', 'v2/blacklists/%(blacklist_id)s']
 #    inputs:
 #      url_input:
-#        blacklist_id: {'required': 'True', 'type': 'ressource'}
+#        blacklist_id: {'required': 'True', 'type': 'resource'}
 #
 #  - name: 'blacklist_list'
 #    url: ['GET', 'v2/blacklists']
 #    outputs:
-#      blacklist_id: {'json_extract': 'lambda x: [i["id"] for i in x["blacklists"]]', 'type': 'ressource'}
+#      blacklist_id: {'json_extract': 'lambda x: [i["id"] for i in x["blacklists"]]', 'type': 'resource'}
 
