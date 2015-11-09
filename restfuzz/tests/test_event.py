@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 import unittest
-import javago.event
+import restfuzz.event
 from cStringIO import StringIO
 
 
 class EventTests(unittest.TestCase):
     def test_event(self):
-        e = javago.event.Event("test_event")
+        e = restfuzz.event.Event("test_event")
 
         class FakeResp:
             status_code = 42
@@ -19,10 +19,10 @@ class EventTests(unittest.TestCase):
 class EventDbTests(unittest.TestCase):
     def test_event_list(self):
         tmp_file = StringIO()
-        db = javago.event.EventDb(tmp_file)
+        db = restfuzz.event.EventDb(tmp_file)
         # insert 10 events
         for idx in xrange(10):
-            event = javago.event.Event("test%03d" % idx)
+            event = restfuzz.event.Event("test%03d" % idx)
             db.append(event)
         # check event list
         idx = 0

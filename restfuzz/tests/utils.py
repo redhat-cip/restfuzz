@@ -2,7 +2,7 @@
 
 import json
 
-API_DIR = "%s/api" % (__file__[:__file__.index('/javago/tests')])
+API_DIR = "%s/api" % (__file__[:__file__.index('/restfuzz/tests')])
 
 
 class FakeApi:

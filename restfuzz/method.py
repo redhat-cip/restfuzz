@@ -5,8 +5,8 @@ import os
 import json
 import itertools # noqa
 
-from javago.utils import debug
-from javago.event import Event
+from restfuzz.utils import debug
+from restfuzz.event import Event
 
 
 class Method:

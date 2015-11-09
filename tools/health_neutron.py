@@ -2,8 +2,8 @@
 
 import time
 import os
-import javago.health
-from javago.event import Event as Ev
+import restfuzz.health
+from restfuzz.event import Event as Ev
 import glob
 
 
@@ -39,7 +39,7 @@ class Health:
         self.open_logs()
         for lf in self.log_files.values():
             while True:
-                t = javago.health.collect_traceback(lf)
+                t = restfuzz.health.collect_traceback(lf)
                 if not t:
                     break
                 tb_hash, tb_id, tb = t

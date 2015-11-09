@@ -10,7 +10,7 @@ from fuzzer import ApiRandomCaller
 from event import EventDb
 
 
-def do_javago():
+def do_restfuzz():
     parser = argparse.ArgumentParser()
     parser.add_argument("--api", nargs='+', metavar="file_or_dir", help="Api description", required=True)
     parser.add_argument("--token", help="X-Auth-Token to use")
@@ -87,9 +87,9 @@ def do_javago():
                 raise
 
 
-def javago():
+def restfuzz():
     try:
-        do_javago()
+        do_restfuzz()
     except KeyboardInterrupt:
         print "exiting..."
 

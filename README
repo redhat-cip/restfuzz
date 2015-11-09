@@ -1,5 +1,5 @@
-Javago - an API tester
-======================
+RestFuzz - an API tester
+========================
 
 Features
 --------
@@ -14,17 +14,17 @@ Usage example
 
 This unit test output shows example of randomly generated api call. A fake API is used, no actual request is performed::
 
-  $ python javago/tests/test_fuzzer.py
+  $ python restfuzz/tests/test_fuzzer.py
 
 A demo server and description is also included::
 
   $ python demo/demo_server.py
-  $ javago --api demo/demo.yaml
+  $ restfuzz --api demo/demo.yaml
 
 A typical fuzzing session goes like this:
 
   $ ./tools/packstack_prep.sh
-  $ javago --api ./api/network.yaml --health ./tools/health_neutron.py --db ./samples/neutron_$(date '+%s')
+  $ restfuzz --api ./api/network.yaml --health ./tools/health_neutron.py --db ./samples/neutron_$(date '+%s')
   ... ^C
   $ ./tools/read_dump.py --stats ./samples/neutron_*
   # Based on the method that always failed, or weird return code

@@ -48,10 +48,10 @@ class Demo:
             update_port[k] = v
         return json.dumps(update_port)
 
-print "Javago demo REST API server"
-print "---------------------------"
+print "RestFuzz demo REST API server"
+print "-----------------------------"
 print ""
-print "Run python ./bin/javago.py --api ./demo/demo.yaml"
+print "Run python ./bin/restfuzz.py --api ./demo/demo.yaml"
 print
 
 print "Listening on",

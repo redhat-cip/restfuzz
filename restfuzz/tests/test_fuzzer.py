@@ -2,15 +2,15 @@
 
 import unittest
 import time
-import javago.method
+import restfuzz.method
 
-from javago.tests.utils import API_DIR, FakeApi
-from javago.fuzzer import ApiRandomCaller
+from restfuzz.tests.utils import API_DIR, FakeApi
+from restfuzz.fuzzer import ApiRandomCaller
 
 
 class FuzzerTests(unittest.TestCase):
     def test_api_random_caller(self, display=False):
-        methods = javago.method.load_methods(API_DIR)
+        methods = restfuzz.method.load_methods(API_DIR)
         api = FakeApi()
         fuzzer = ApiRandomCaller(api, methods)
         method_called = set()
@@ -26,7 +26,7 @@ class FuzzerTests(unittest.TestCase):
 
     def test_api_random_caller_ressouce_mgmt(self):
         methods = {
-            'update': javago.method.Method({
+            'update': restfuzz.method.Method({
                 'name': 'update',
                 'url': ['PUT', '%(resource_id)s.json'],
                 'inputs': {'url_input': {'resource_id': {'type': 'resource', 'required': 'True'}}}
@@ -42,7 +42,7 @@ class FuzzerTests(unittest.TestCase):
         self.assertEquals(len(fuzzer.ig.resources), 0)
 
         methods = {
-            'delete': javago.method.Method({
+            'delete': restfuzz.method.Method({
                 'name': 'delete',
                 'url': ['DELETE', '%(resource_id)s.json'],
                 'inputs': {'url_input': {'resource_id': {'type': 'resource', 'required': 'True'}}}
@@ -56,12 +56,12 @@ class FuzzerTests(unittest.TestCase):
         self.assertEquals(len(fuzzer.ig.resources), 0)
 
         methods = {
-            'resource_list': javago.method.Method({
+            'resource_list': restfuzz.method.Method({
                 'name': 'resource_list',
                 'url': ['GET', 'list.json'],
                 'outputs': {'resource_id': {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x]'}}
             }, base_url='http://localhost'),
-            'delete': javago.method.Method({
+            'delete': restfuzz.method.Method({
                 'name': 'delete',
                 'url': ['DELETE', '%(resource_id)s.json'],
                 'inputs': {'url_input': {'resource_id': {'type': 'resource', 'required': 'True'}}}

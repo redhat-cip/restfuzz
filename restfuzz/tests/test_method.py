@@ -1,16 +1,16 @@
 #!/usr/bin/python
 
 import unittest
-import javago
+import restfuzz
 from cStringIO import StringIO
 
-import javago.method
-from javago.tests.utils import FakeApi
+import restfuzz.method
+from restfuzz.tests.utils import FakeApi
 
 
 class MethodTests(unittest.TestCase):
     def test_method_basic_call(self):
-        method = javago.method.Method({
+        method = restfuzz.method.Method({
             'name': 'test',
             'url': ['GET', 'list.json'],
         }, base_url='http://localhost:8080')
@@ -20,7 +20,7 @@ class MethodTests(unittest.TestCase):
         self.assertEquals(event.url, 'http://localhost:8080/list.json')
 
     def test_method_inputs(self):
-        method = javago.method.Method({
+        method = restfuzz.method.Method({
             'name': 'test',
             'url': ['POST', 'create.json'],
             'inputs': {'name': {'type': 'string'}}
@@ -30,7 +30,7 @@ class MethodTests(unittest.TestCase):
         self.assertEquals(event.json_input, '{"name": "test_name"}')
 
     def test_method_outputs(self):
-        method = javago.method.Method({
+        method = restfuzz.method.Method({
             'name': 'test',
             'url': ['GET', 'list.json'],
             'outputs': {
@@ -43,7 +43,7 @@ class MethodTests(unittest.TestCase):
         self.assertEqual(event.outputs, {"id": ["42"]})
 
     def test_method_url_inputs(self):
-        method = javago.method.Method({
+        method = restfuzz.method.Method({
             'name': 'test',
             'url': ['PUT', '%(test)s.json'],
             'inputs': {
@@ -61,12 +61,12 @@ class MethodTests(unittest.TestCase):
         methods = {}
         with self.assertRaises(RuntimeError):
             # missing methods
-            javago.method.load_yaml(StringIO("base_url: ''"), methods)
+            restfuzz.method.load_yaml(StringIO("base_url: ''"), methods)
         with self.assertRaises(RuntimeError):
             # invalid inputs
-            javago.method.Method({'name': 'test', 'url': ['GET', 'none'], 'inputs': {'test': []}}, base_url='none')
+            restfuzz.method.Method({'name': 'test', 'url': ['GET', 'none'], 'inputs': {'test': []}}, base_url='none')
         # invalid json extract
-        m = javago.method.Method({
+        m = restfuzz.method.Method({
             'name': 'test',
             'url': ['GET', 'none'],
             'inputs': {'net_id': {'type': 'resource', 'required': 'True'}},
