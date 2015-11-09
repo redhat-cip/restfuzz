@@ -1,0 +1,21 @@
+Javago - an API wanderer
+========================
+
+Todo
+----
+* Current ressources collections before starting (using *_list methods)
+* Better method picking
+* ???
+
+Usage
+-----
+
+* Draw graph of methods from api description:
+python javago.py ./api/network.yaml --graph
+
+* Dry-run step by step test:
+python javago.py ./api/ --debug
+
+* Fuzz session
+python javago.py ./api/ | tee javago-$(date '+%s').log
+
