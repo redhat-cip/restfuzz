@@ -17,6 +17,8 @@
 import argparse
 import os
 import gzip
+import time
+from sys import stdout
 
 import method
 from api import Api
@@ -32,8 +34,16 @@ def do_restfuzz():
     parser.add_argument("--db", help="File path to store event in")
     parser.add_argument("--health", help="Python module path to call after each call")
     parser.add_argument("--debug", action="store_const", const=True)
+    parser.add_argument("--verbose", action="store_const", const=True)
+    parser.add_argument("--seed", help="PRNG seed")
+    parser.add_argument("--max_events", help="Maximum number of event", default=1e6, type=int)
+    parser.add_argument("--max_time", help="Maximum running time", default=3600 * 12, type=int)
 
     args = parser.parse_args()
+
+    def verbose(msg):
+        if args.verbose:
+            print msg
 
     methods = {}
     for api in args.api:
@@ -44,7 +54,7 @@ def do_restfuzz():
     if args.token:
         api.set_header("X-Auth-Token", args.token)
 
-    fuzzer = ApiRandomCaller(api, methods)
+    fuzzer = ApiRandomCaller(api, methods, args.seed)
     if args.db:
         db = EventDb(open(args.db, "w"))
 
@@ -71,13 +81,17 @@ def do_restfuzz():
     for k, v in fuzzer.ig.resources.items():
         print "->", k, v
 
-    while True:
+    stats = {"total": 0, "http_code": {}, "start_time": time.time(), "last_speed": [0, time.time()]}
+    while stats["total"] < args.max_events or (time.time() - stats["start_time"]) > args.max_time:
+        new_traceback = False
         event = fuzzer.step(args.debug)
         if health:
             for d in health.check():
                 if d[0] == "res":
                     event.res = d[1]
                 elif d[0] == "tb":
+                    if "tb" in d[1]:
+                        new_traceback = True
                     event.tracebacks.append(d[1])
                 else:
                     print "Unknown health tupple", d
@@ -85,12 +99,15 @@ def do_restfuzz():
         if args.db:
             db.append(event)
 
-        if event.code in (400, 404, 409):
-            print event.render('\033[94m')
-        elif event.code >= 200 and event.code < 300:
-            print event.render('\033[92m')
+        if new_traceback:
+            print "\n\n%s\n" % event.render('\033[91m')
         else:
-            print event.render('\033[91m')
+            if event.code in (400, 404, 409):
+                verbose(event.render('\033[94m'))
+            elif event.code >= 200 and event.code < 300:
+                verbose(event.render('\033[92m'))
+            else:
+                verbose(event.render('\033[91m'))
 
         if event.code == 401 and event.json_output and "auth" in event.json_output.lower() and "OS_USERNAME" in os.environ:
             print "[+] Requesting a new token"
@@ -99,6 +116,21 @@ def do_restfuzz():
             except:
                 print "[+] Could not get keystone token"
                 raise
+
+        stats["http_code"][event.code] = 1 + stats["http_code"].setdefault(event.code, 0)
+        stats["total"] += 1
+        if stats["total"] % 100 == 0:
+            time_now = time.time()
+            status_line = "\r%d sec elapsed, %dk events, (%03.02f events/seconds), http_code: %s " % (
+                time_now - stats["start_time"],
+                stats["total"] / 1000,
+                (stats["total"] - stats["last_speed"][0]) / (time_now - stats["last_speed"][1]),
+                stats["http_code"],
+            )
+            stats["last_speed"] = [stats["total"], time_now]
+            print status_line,
+            stdout.flush()
+    print "\nOver."
 
 
 def restfuzz():

@@ -19,11 +19,11 @@ from input_generator import InputGenerator
 
 
 class ApiRandomCaller:
-    def __init__(self, api, methods, chaos_monkey=True):
+    def __init__(self, api, methods, seed=None, chaos_monkey=True):
         self.api = api
         self.methods = methods
         self.methods_list = methods.values()
-        self.ig = InputGenerator(chaos_monkey)
+        self.ig = InputGenerator(seed, chaos_monkey)
 
     def call(self, method, inputs=None):
         event = method.call(self.api, params=inputs)
@@ -44,8 +44,9 @@ class ApiRandomCaller:
         random.shuffle(self.methods_list)
         # Pick a callable method
         for method in self.methods_list:
-            # Tries to avoid delete
-            if method.http_method != 'DELETE' or self.ig.once_every(200):
+            # Tries to avoid delete and list
+            if (method.http_method != 'DELETE' and
+               not method.name.endswith('_list')) or self.ig.once_every(100):
                 break
         # Generate inputs
         inputs = self.ig.generate_inputs(method.inputs)

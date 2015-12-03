@@ -15,12 +15,16 @@
 # under the License.
 
 import string
+import struct
 import random
 import uuid
 
 
 class InputGenerator(object):
-    def __init__(self, chaos_monkey=True):
+    def __init__(self, seed=None, chaos_monkey=True):
+        if seed is None:
+            seed = "JAVAGO"
+        random.seed(seed)
         self.generator_list = []
         for generator in dir(self):
             if generator.startswith('gen_'):
@@ -167,8 +171,10 @@ class InputGenerator(object):
         return d
 
     def gen_unicode(self):
-        chunk = open("/dev/urandom").read(random.randint(0, 512))
-        return unicode(chunk, errors='ignore')
+        chunk = []
+        for i in xrange(random.randint(1, 128)):
+            chunk.append(struct.pack("f", random.random()))
+        return unicode("".join(chunk), errors='ignore')
 
     def gen_ascii(self):
         return ''.join(random.choice(string.letters + string.digits) for _ in range(random.randint(1, 512))),
