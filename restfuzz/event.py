@@ -60,9 +60,9 @@ class Event(object):
         tb = ""
         new_tb = []
         for t in self.tracebacks:
-            if "tb" in t:
-                new_tb.append(t["tb"])
-            tb += ", %s" % t["id"]
+            if "uniq_tb" in t:
+                new_tb.append(t["uniq_tb"])
+            tb += ", %s" % t["tb_id"]
         if new_tb:
             new_tb = "\n%s" % "\n".join(new_tb)
         else:

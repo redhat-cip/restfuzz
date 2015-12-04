@@ -16,6 +16,7 @@
 
 import random
 from input_generator import InputGenerator
+import requests.exceptions
 
 
 class ApiRandomCaller:
@@ -26,7 +27,13 @@ class ApiRandomCaller:
         self.ig = InputGenerator(seed, chaos_monkey)
 
     def call(self, method, inputs=None):
-        event = method.call(self.api, params=inputs)
+        try:
+            event = method.call(self.api, params=inputs)
+        except requests.exceptions.ConnectionError:
+            print "[E] Couldn't call %s/%s" % (
+                method.base_url, method.url)
+            method.enabled = False
+            return None
         # Remove resources that results in a 404
         if event.code == 404 and 'url_input' in inputs:
             for input_name, input_value in inputs['url_input'].items():
@@ -44,10 +51,15 @@ class ApiRandomCaller:
         random.shuffle(self.methods_list)
         # Pick a callable method
         for method in self.methods_list:
+            if not method.enabled:
+                continue
             # Tries to avoid delete and list
             if (method.http_method != 'DELETE' and
                not method.name.endswith('_list')) or self.ig.once_every(100):
                 break
+        if not method.enabled:
+            print "Couldn't find a working method, abort"
+            exit(1)
         # Generate inputs
         inputs = self.ig.generate_inputs(method.inputs)
         if ask_before_call:
@@ -63,6 +75,11 @@ class ApiRandomCaller:
         for name, method in self.methods.items():
             if not name.endswith("_list"):
                 continue
-            event = method.call(self.api)
+            try:
+                event = method.call(self.api)
+            except requests.exceptions.ConnectionError:
+                print "[E] Couldn't call %s/%s" % (
+                    method.base_url, method.url)
+                continue
             # Adds output to resources
             self.ig.resources_add(event.outputs)

@@ -38,3 +38,8 @@ for obj in router port subnet net security-group; do
         neutron ${obj}-delete $i
     done
 done
+
+# Clean logs
+for obj in /var/log/*/*; do
+    echo -n | sudo tee $obj
+done

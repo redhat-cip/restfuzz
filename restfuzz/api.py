@@ -27,8 +27,4 @@ class Api:
 
     def request(self, http_method, endpoint, data, content_type = 'application/json'):
         self.headers['Content-Type'] = content_type
-        try:
-            return requests.request(http_method, url=endpoint, headers=self.headers, data=data)
-        except:
-            print "[E] Could not call %s %s with [%s]" % (http_method, endpoint, data)
-            raise
+        return requests.request(http_method, url=endpoint, headers=self.headers, data=data)

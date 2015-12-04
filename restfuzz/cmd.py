@@ -82,19 +82,19 @@ def do_restfuzz():
         print "->", k, v
 
     stats = {"total": 0, "http_code": {}, "start_time": time.time(), "last_speed": [0, time.time()]}
-    while stats["total"] < args.max_events or (time.time() - stats["start_time"]) > args.max_time:
+    while stats["total"] < args.max_events and (time.time() - stats["start_time"]) < args.max_time:
         new_traceback = False
         event = fuzzer.step(args.debug)
+        if event is None:
+            continue
         if health:
-            for d in health.check():
-                if d[0] == "res":
-                    event.res = d[1]
-                elif d[0] == "tb":
-                    if "tb" in d[1]:
+            for health_event in health.check():
+                if "tb_id" in health_event:
+                    if "uniq_tb" in health_event:
                         new_traceback = True
-                    event.tracebacks.append(d[1])
+                    event.tracebacks.append(health_event)
                 else:
-                    print "Unknown health tupple", d
+                    print "Unknown health event", health_event
 
         if args.db:
             db.append(event)
@@ -171,9 +171,9 @@ def reader():
             ev_st[event.code][0] += 1
 
             for tb in event.tracebacks:
-                if tb["hash"] not in stats["tb"]:
-                    stats["tb"][tb["hash"]] = [0, tb["id"], tb["tb"]]
-                stats["tb"][tb["hash"]][0] += 1
+                if tb["tb_hash"] not in stats["tb"]:
+                    stats["tb"][tb["tb_hash"]] = [0, tb["tb_id"], tb["uniq_tb"]]
+                stats["tb"][tb["tb_hash"]][0] += 1
         if event.name.endswith("_list"):
             continue
         if args.code and event.code not in args.code:

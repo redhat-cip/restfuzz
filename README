@@ -24,9 +24,9 @@ A demo server and description is also included::
 A typical fuzzing session goes like this:
 
   $ ./tools/packstack_prep.sh
-  $ restfuzz --api ./api/network.yaml --health ./tools/health_neutron.py --db ./samples/neutron_$(date '+%s')
+  $ restfuzz --api ./api/network.yaml --health ./tools/health_localhost.py --db ./neutron_$(date '+%s')
   ... ^C
-  $ ./tools/read_dump.py --stats ./samples/neutron_*
+  $ ./tools/read_dump.py --stats ./neutron_*
   # Based on the method that always failed, or weird return code
   $ ./tools/read_dump.py --name faulty_method ./samples/neutron_*
   # Returns all the call from this method

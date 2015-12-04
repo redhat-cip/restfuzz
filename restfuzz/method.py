@@ -32,6 +32,7 @@ class Method:
         self.url = kwarg['url'][1]
         self.inputs = kwarg.setdefault('inputs', {})
         self.outputs = kwarg.setdefault('outputs', {})
+        self.enabled = True
 
         # check method requirements/outputs
         self.requires = set()
