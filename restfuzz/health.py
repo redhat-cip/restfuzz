@@ -63,7 +63,7 @@ def collect_traceback(in_file):
     # Trace id
     trace_id = "%s %s" % (in_file.name, l[:tb_column])
 
-    return tb_hash_str, trace_id, "\n".join(tb)
+    return tb_hash_str, trace_id, tb
 
 
 def main():
@@ -79,7 +79,7 @@ def main():
             continue
         if l[0] not in uniq_tb:
             print "Uniq tb:", l[1]
-            print l[2]
+            print "\n".join(l[2])
         else:
             print "Known tb:", l[1]
         uniq_tb.add(l[0])

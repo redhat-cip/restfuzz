@@ -18,6 +18,20 @@ import os
 import restfuzz.health
 
 
+tracebacks_blacklist = set((
+    "IpAddressGenerationFailure: No more IP addresses available on network",
+    "HTTPBadRequest: Cannot update read-only",
+    "HTTPBadRequest: Unrecognized attribute(s)",
+    "HTTPBadRequest: Unable to find",
+    "HTTPForbidden: Tenant",
+    "Invalid input for",
+    "request requires admin privileges",
+    "is not a valid",
+    "is not allowed",
+    "Cannot update read-only attribute",
+))
+
+
 class Health:
     SERVICES=("neutron", "glance", "cinder")
 
@@ -51,9 +65,11 @@ class Health:
                 if not t:
                     break
                 tb_hash, tb_id, tb = t
+                if filter(lambda x: x in tb[-1], tracebacks_blacklist):
+                    continue
                 if tb_hash not in self.uniq_tb:
                     self.uniq_tb.add(tb_hash)
-                    yield {"tb_id": tb_id, "tb_hash": tb_hash, "uniq_tb": tb}
+                    yield {"tb_id": tb_id, "tb_hash": tb_hash, "uniq_tb": "\n".join(tb)}
                 else:
                     # known tb, don't yield full trace
                     yield {"tb_id": tb_id, "tb_hash": tb_hash}
