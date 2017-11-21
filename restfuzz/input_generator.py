@@ -93,7 +93,7 @@ class InputGenerator(object):
         }
         try:
             input_type = record_type_generator[record_type]
-        except:
+        except Exception:
             input_type = random.choice(record_type_generator.values())
         if self.once_every(5):
             input_type = random.choice(record_type_generator.values())
@@ -208,7 +208,7 @@ class InputGenerator(object):
         try:
             if self.oncne_every(5) or ":" in addr:
                 return "%s/%d" % (addr, random.randint(0, 128))
-        except:
+        except Exception:
             pass
         return "%s/%d" % (addr, random.randint(0, 32))
 

@@ -1,0 +1,10 @@
+---
+- project:
+    name: restfuzz
+    check:
+      jobs:
+        - tox-py27
+        - tox-pep8
+    gate:
+      jobs:
+        - noop

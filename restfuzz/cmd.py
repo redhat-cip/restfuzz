@@ -113,7 +113,7 @@ def do_restfuzz():
             print "[+] Requesting a new token"
             try:
                 refresh_keystone_token()
-            except:
+            except Exception:
                 print "[+] Could not get keystone token"
                 raise
 

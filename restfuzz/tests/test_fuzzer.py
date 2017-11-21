@@ -87,6 +87,7 @@ class FuzzerTests(unittest.TestCase):
         fuzzer.sync_resources()
         self.assertTrue('41' in fuzzer.ig.resources['resource_id'])
 
+
 if __name__ == "__main__":
     t = FuzzerTests('test_api_random_caller')
     t.test_api_random_caller(True)

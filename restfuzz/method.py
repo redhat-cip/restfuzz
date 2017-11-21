@@ -104,7 +104,7 @@ class Method:
                 value = None
                 try:
                     value = eval(self.outputs[output]['json_extract'])(json_output)
-                except:
+                except Exception:
                     debug("Could not decode output [%s] with %s" % (json_output, self.outputs[output]))
                 if not value:
                     continue
