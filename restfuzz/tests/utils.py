@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -25,7 +23,7 @@ class FakeApi:
         self.text = resp_content
         self.status_code = resp_code
 
-    def request(self, method, endpoint, data, content_type = ''):
+    def request(self, method, endpoint, data, content_type=''):
         class FakeRequest:
             status_code = self.status_code
             text = self.text

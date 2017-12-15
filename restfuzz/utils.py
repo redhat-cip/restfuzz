@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -16,4 +14,4 @@
 
 
 def debug(msg):
-    print "\033[93m%s\033[0m" % msg
+    print("\033[93m%s\033[0m" % msg)

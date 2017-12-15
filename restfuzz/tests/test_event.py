@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -16,7 +14,7 @@
 
 import unittest
 import restfuzz.event
-from cStringIO import StringIO
+from io import BytesIO
 
 
 class EventTests(unittest.TestCase):
@@ -32,10 +30,10 @@ class EventTests(unittest.TestCase):
 
 class EventDbTests(unittest.TestCase):
     def test_event_list(self):
-        tmp_file = StringIO()
+        tmp_file = BytesIO()
         db = restfuzz.event.EventDb(tmp_file)
         # insert 10 events
-        for idx in xrange(10):
+        for idx in range(10):
             event = restfuzz.event.Event("test%03d" % idx)
             db.append(event)
         # check event list

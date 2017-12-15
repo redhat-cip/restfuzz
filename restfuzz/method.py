@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -51,7 +49,8 @@ class Method:
             data_set = self.inputs
 
         if not isinstance(data_set, dict):
-            raise RuntimeError("%s: Missing type in input/output description" % data_set)
+            raise RuntimeError(
+                "%s: Missing type in input/output description" % data_set)
         for k, v in data_set.items():
             if 'type' in v:
                 yield (k, v)
@@ -80,8 +79,12 @@ class Method:
                 del params['url_input']
                 if params:
                     if "raw_data" in params:
-                        json_input = str(params["raw_data"])
-                        content_type = 'application/octet-stream'
+                        try:
+                            json_input = params["raw_data"].encode(
+                                'utf-8', errors='ignore')
+                            content_type = 'application/octet-stream'
+                        except Exception:
+                            pass
                     else:
                         json_input = json.dumps(params)
                 params['url_input'] = url_input
@@ -95,7 +98,7 @@ class Method:
 
         outputs = {}
         if resp.status_code >= 200 and resp.status_code < 300 and resp.text:
-            # Extract outputs from method results according to method outputs description
+            # Extract outputs from method results
             try:
                 json_output = resp.json()
             except ValueError:
@@ -103,9 +106,11 @@ class Method:
             for output in self.outputs:
                 value = None
                 try:
-                    value = eval(self.outputs[output]['json_extract'])(json_output)
+                    value = eval(
+                        self.outputs[output]['json_extract'])(json_output)
                 except Exception:
-                    debug("Could not decode output [%s] with %s" % (json_output, self.outputs[output]))
+                    debug("Could not decode output [%s] with %s" % (
+                        json_output, self.outputs[output]))
                 if not value:
                     continue
                 if not isinstance(value, list):
@@ -134,7 +139,8 @@ def load_yaml(fobj, methods):
 def load_methods(folder_or_file):
     files = []
     if os.path.isdir(folder_or_file):
-        for fname in filter(lambda d: d.endswith('.yaml'), os.listdir(folder_or_file)):
+        for fname in filter(lambda d: d.endswith('.yaml'),
+                            os.listdir(folder_or_file)):
             files.append("%s/%s" % (folder_or_file, fname))
     elif os.path.isfile(folder_or_file) and folder_or_file.endswith('.yaml'):
         files.append(folder_or_file)

@@ -33,7 +33,7 @@ tracebacks_blacklist = set((
 
 
 class Health:
-    SERVICES=("neutron", "glance", "cinder")
+    SERVICES = ("neutron", "glance", "cinder")
 
     def __init__(self):
         self.log_files = {}
@@ -69,7 +69,9 @@ class Health:
                     continue
                 if tb_hash not in self.uniq_tb:
                     self.uniq_tb.add(tb_hash)
-                    yield {"tb_id": tb_id, "tb_hash": tb_hash, "uniq_tb": "\n".join(tb)}
+                    yield {"tb_id": tb_id,
+                           "tb_hash": tb_hash,
+                           "uniq_tb": "\n".join(tb)}
                 else:
                     # known tb, don't yield full trace
                     yield {"tb_id": tb_id, "tb_hash": tb_hash}

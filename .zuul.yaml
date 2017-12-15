@@ -3,8 +3,13 @@
     name: restfuzz
     check:
       jobs:
-        - tox-py27
-        - tox-pep8
+        - tox-py35-f27
+        - tox-pep8:
+            nodeset:
+              nodes:
+                - name: container
+                  label: f27-oci
+
     gate:
       jobs:
         - noop

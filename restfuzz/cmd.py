@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -20,30 +18,35 @@ import gzip
 import time
 from sys import stdout
 
-import method
-from api import Api
-from fuzzer import ApiRandomCaller
-from event import EventDb
+from restfuzz import method
+from restfuzz.api import Api
+from restfuzz.fuzzer import ApiRandomCaller
+from restfuzz.event import EventDb
 
 
 def do_restfuzz():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--api", nargs='+', metavar="file_or_dir", help="Api description", required=True)
+    parser.add_argument("--api", nargs='+', metavar="file_or_dir",
+                        help="Api description", required=True)
     parser.add_argument("--token", help="X-Auth-Token to use")
-    parser.add_argument("--tenant_id", nargs='+', default=[], help="Adds tenant ids")
+    parser.add_argument("--tenant_id", nargs='+', default=[],
+                        help="Adds tenant ids")
     parser.add_argument("--db", help="File path to store event in")
-    parser.add_argument("--health", help="Python module path to call after each call")
+    parser.add_argument("--health",
+                        help="Python module path to call after each call")
     parser.add_argument("--debug", action="store_const", const=True)
     parser.add_argument("--verbose", action="store_const", const=True)
     parser.add_argument("--seed", help="PRNG seed")
-    parser.add_argument("--max_events", help="Maximum number of event", default=1e6, type=int)
-    parser.add_argument("--max_time", help="Maximum running time", default=3600 * 12, type=int)
+    parser.add_argument("--max_events", default=1e6, type=int,
+                        help="Maximum number of event")
+    parser.add_argument("--max_time", default=3600 * 12, type=int,
+                        help="Maximum running time")
 
     args = parser.parse_args()
 
     def verbose(msg):
         if args.verbose:
-            print msg
+            print(msg)
 
     methods = {}
     for api in args.api:
@@ -56,7 +59,7 @@ def do_restfuzz():
 
     fuzzer = ApiRandomCaller(api, methods, args.seed)
     if args.db:
-        db = EventDb(open(args.db, "w"))
+        db = EventDb(open(args.db, "wb"))
 
     health = None
     if args.health:
@@ -67,7 +70,9 @@ def do_restfuzz():
         fuzzer.ig.resource_add("tenant_id", tenant_id)
 
     def refresh_keystone_token():
-        token, tenant_id = os.popen("openstack token issue | grep ' id\|project_id' | awk '{ print $4 }'").read().split()
+        token, tenant_id = os.popen("openstack token issue | "
+                                    "grep ' id\|project_id' | "
+                                    "awk '{ print $4 }'").read().split()
         api.set_header("X-Auth-Token", token)
         fuzzer.ig.resource_add("tenant_id", tenant_id)
         fuzzer.sync_resources()
@@ -76,13 +81,18 @@ def do_restfuzz():
     if "OS_USERNAME" in os.environ and not args.token:
         refresh_keystone_token()
 
-    print "[+] Syncing resources..."
+    print("[+] Syncing resources...")
     fuzzer.sync_resources()
     for k, v in fuzzer.ig.resources.items():
-        print "->", k, v
+        print("->", k, v)
 
-    stats = {"total": 0, "http_code": {}, "start_time": time.time(), "last_speed": [0, time.time()]}
-    while stats["total"] < args.max_events and (time.time() - stats["start_time"]) < args.max_time:
+    stats = {
+        "total": 0,
+        "http_code": {},
+        "start_time": time.monotonic(),
+        "last_speed": [0, time.monotonic()]}
+    while (stats["total"] < args.max_events and
+           (time.monotonic() - stats["start_time"]) < args.max_time):
         new_traceback = False
         event = fuzzer.step(args.debug)
         if event is None:
@@ -94,13 +104,13 @@ def do_restfuzz():
                         new_traceback = True
                     event.tracebacks.append(health_event)
                 else:
-                    print "Unknown health event", health_event
+                    print("Unknown health event", health_event)
 
         if args.db:
             db.append(event)
 
         if new_traceback:
-            print "\n\n%s\n" % event.render('\033[91m')
+            print("\n\n%s\n" % event.render('\033[91m'))
         else:
             if event.code in (400, 404, 409):
                 verbose(event.render('\033[94m'))
@@ -109,43 +119,52 @@ def do_restfuzz():
             else:
                 verbose(event.render('\033[91m'))
 
-        if event.code == 401 and event.json_output and "auth" in event.json_output.lower() and "OS_USERNAME" in os.environ:
-            print "[+] Requesting a new token"
+        if event.code == 401 and \
+           event.json_output and \
+           "auth" in event.json_output.lower() and \
+           "OS_USERNAME" in os.environ:
+            print("[+] Requesting a new token")
             try:
                 refresh_keystone_token()
             except Exception:
-                print "[+] Could not get keystone token"
+                print("[+] Could not get keystone token")
                 raise
 
-        stats["http_code"][event.code] = 1 + stats["http_code"].setdefault(event.code, 0)
+        stats["http_code"][event.code] = 1 + stats["http_code"].setdefault(
+            event.code, 0)
         stats["total"] += 1
         if stats["total"] % 100 == 0:
-            time_now = time.time()
-            status_line = "\r%d sec elapsed, %dk events, (%03.02f events/seconds), http_code: %s " % (
-                time_now - stats["start_time"],
-                stats["total"] / 1000,
-                (stats["total"] - stats["last_speed"][0]) / (time_now - stats["last_speed"][1]),
-                stats["http_code"],
-            )
+            time_now = time.monotonic()
+            status_line = "\r%d sec elapsed, %dk events, " \
+                          "(%03.02f events/seconds), http_code: %s " % (
+                              time_now - stats["start_time"],
+                              stats["total"] / 1000,
+                              (stats["total"] - stats["last_speed"][0]) / (
+                                  time_now - stats["last_speed"][1]),
+                              stats["http_code"],
+                          )
             stats["last_speed"] = [stats["total"], time_now]
-            print status_line,
+            print(status_line, end='')
             stdout.flush()
-    print "\nOver."
+    print("\nOver.")
 
 
 def restfuzz():
     try:
         do_restfuzz()
     except KeyboardInterrupt:
-        print "exiting..."
+        print("exiting...")
 
 
 def reader():
     parser = argparse.ArgumentParser()
     parser.add_argument("db", help="File path to read event from")
-    parser.add_argument("--stats", action='store_const', const=True, help="Show stats")
-    parser.add_argument("--name", nargs='+', default=[], help="Filter method name")
-    parser.add_argument("--code", nargs='+', default=[], type=int, help="Filter return code")
+    parser.add_argument("--stats", action='store_const', const=True,
+                        help="Show stats")
+    parser.add_argument("--name", nargs='+', default=[],
+                        help="Filter method name")
+    parser.add_argument("--code", nargs='+', default=[], type=int,
+                        help="Filter return code")
     parser.add_argument("--limit", type=int)
 
     args = parser.parse_args()
@@ -153,7 +172,7 @@ def reader():
     if args.db.endswith(".gz"):
         db_file = gzip.GzipFile(args.db)
     else:
-        db_file = open(args.db)
+        db_file = open(args.db, 'rb')
 
     db = EventDb(db_file)
 
@@ -172,7 +191,8 @@ def reader():
 
             for tb in event.tracebacks:
                 if tb["tb_hash"] not in stats["tb"]:
-                    stats["tb"][tb["tb_hash"]] = [0, tb["tb_id"], tb["uniq_tb"]]
+                    stats["tb"][tb["tb_hash"]] = [
+                        0, tb["tb_id"], tb["uniq_tb"]]
                 stats["tb"][tb["tb_hash"]][0] += 1
         if event.name.endswith("_list"):
             continue
@@ -181,20 +201,18 @@ def reader():
         if args.name and event.name not in args.name:
             continue
         if not args.stats:
-            print event
+            print(event)
 
     if args.stats:
         ev_list = stats["event"].keys()
         ev_list.sort()
         for ev in ev_list:
-            print
-            print "== %s ==" % ev
+            print("\n== %s ==" % ev)
             for status_code in stats["event"][ev]:
                 num, example = stats["event"][ev][status_code]
-                print "%d: %d - [%s]\n\texample: %s" % (status_code, num, example.json_output, example)
+                print("%d: %d - [%s]\n\texample: %s" % (
+                    status_code, num, example.json_output, example))
         for tb in stats["tb"].values():
-            print
-            print "Uniq traceback %d count, %s" % (tb[0], tb[1])
-            print tb[2]
-        print
-        print "Total events", stats["total"]
+            print("\nUniq traceback %d count, %s" % (tb[0], tb[1]))
+            print(tb[2])
+        print("\nTotal events", stats["total"])

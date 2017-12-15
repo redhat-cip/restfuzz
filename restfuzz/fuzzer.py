@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -15,23 +13,24 @@
 # under the License.
 
 import random
-from input_generator import InputGenerator
 import requests.exceptions
+
+from restfuzz.input_generator import InputGenerator
 
 
 class ApiRandomCaller:
     def __init__(self, api, methods, seed=None, chaos_monkey=True):
         self.api = api
         self.methods = methods
-        self.methods_list = methods.values()
+        self.methods_list = list(methods.values())
         self.ig = InputGenerator(seed, chaos_monkey)
 
     def call(self, method, inputs=None):
         try:
             event = method.call(self.api, params=inputs)
         except requests.exceptions.ConnectionError:
-            print "[E] Couldn't call %s/%s" % (
-                method.base_url, method.url)
+            print("[E] Couldn't call %s/%s" % (
+                method.base_url, method.url))
             method.enabled = False
             return None
         # Remove resources that results in a 404
@@ -39,7 +38,9 @@ class ApiRandomCaller:
             for input_name, input_value in inputs['url_input'].items():
                 self.ig.resource_remove(input_name, input_value)
         # Remove resources that were deleted
-        if method.http_method == 'DELETE' and event.code >= 200 and event.code < 300:
+        if method.http_method == 'DELETE' and \
+           event.code >= 200 and \
+           event.code < 300:
             for input_name, input_value in inputs['url_input'].items():
                 self.ig.resource_remove(input_name, input_value)
 
@@ -58,12 +59,13 @@ class ApiRandomCaller:
                not method.name.endswith('_list')) or self.ig.once_every(100):
                 break
         if not method.enabled:
-            print "Couldn't find a working method, abort"
+            print("Couldn't find a working method, abort")
             exit(1)
         # Generate inputs
         inputs = self.ig.generate_inputs(method.inputs)
         if ask_before_call:
-            raw_input("\nPress enter to call %s (%s/%s) -d '%s' " % (method.name, method.base_url, method.url, inputs))
+            input("\nPress enter to call %s (%s/%s) -d '%s' " % (
+                method.name, method.base_url, method.url, inputs))
         return self.call(method, inputs)
 
     def sync_resources(self):
@@ -78,8 +80,8 @@ class ApiRandomCaller:
             try:
                 event = method.call(self.api)
             except requests.exceptions.ConnectionError:
-                print "[E] Couldn't call %s/%s" % (
-                    method.base_url, method.url)
+                print("[E] Couldn't call %s/%s" % (
+                    method.base_url, method.url))
                 continue
             # Adds output to resources
             self.ig.resources_add(event.outputs)

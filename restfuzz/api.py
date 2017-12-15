@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -20,11 +18,15 @@ import requests
 class Api:
     # Wrapper around requests
     def __init__(self):
-        self.headers = {'User-Agent': 'restfuzz-0.1.0', 'Accept': 'application/json'}
+        self.headers = {
+            'User-Agent': 'restfuzz-0.1.0',
+            'Accept': 'application/json'}
 
     def set_header(self, k, v):
         self.headers[k] = v
 
-    def request(self, http_method, endpoint, data, content_type = 'application/json'):
+    def request(self, http_method, endpoint, data,
+                content_type='application/json'):
         self.headers['Content-Type'] = content_type
-        return requests.request(http_method, url=endpoint, headers=self.headers, data=data)
+        return requests.request(
+            http_method, url=endpoint, headers=self.headers, data=data)

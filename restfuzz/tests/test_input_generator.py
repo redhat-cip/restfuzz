@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -71,7 +69,8 @@ class InputGeneratorTests(unittest.TestCase):
         method = restfuzz.method.Method({
             'name': 'list',
             'url': ['GET', 'list.json'],
-            'outputs': {'id': {'json_extract': 'lambda x: [i["id"] for i in x]'}}
+            'outputs': {'id': {'json_extract':
+                               'lambda x: [i["id"] for i in x]'}}
         }, base_url='http://localhost:8080')
         api = FakeApi(resp_content='[{"id": "42"}, {"id": "43"}]')
         event = method.call(api)
@@ -90,7 +89,8 @@ class InputGeneratorTests(unittest.TestCase):
         method = restfuzz.method.Method({
             'name': 'test',
             'url': ['POST', 'create.json'],
-            'inputs': {'obj': {'name': {'type': 'record', 'expand': 'True', 'required': 'True'}}}
+            'inputs': {'obj': {'name': {'type': 'record', 'expand': 'True',
+                                        'required': 'True'}}}
         }, base_url='http://localhost:8080')
         params = ig.generate_inputs(method.inputs)
         self.assertTrue("type" in params['obj'])

@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -15,12 +13,13 @@
 # under the License.
 
 import time
-import cPickle as pickle
+import pickle
 
 
 class Event(object):
     # Contains all the information about a method call
-    def __init__(self, name=None, method=None, url=None, json_input=None, inputs=None, data=None):
+    def __init__(self, name=None, method=None, url=None, json_input=None,
+                 inputs=None, data=None):
         if data:
             self.__dict__ = data
             return
@@ -51,7 +50,11 @@ class Event(object):
         def strip(txt):
             if not txt:
                 return txt
-            txt = filter(lambda x: ord(x) >= 32 and ord(x) < 127, txt)
+            try:
+                txt = "".join(list(filter(
+                    lambda x: ord(x) >= 32 and ord(x) < 127, txt)))
+            except Exception:
+                txt = "(render-failed)"
             return txt
         ftime = "%s.%03.0f" % (
             time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -67,12 +70,13 @@ class Event(object):
             new_tb = "\n%s" % "\n".join(new_tb)
         else:
             new_tb = ""
-        return "[%s] \033[93m%s\033[0m: %s%d| curl -X %4s %s\033[0m -d '%s' -> '%s'%s%s" % (
-            ftime, self.name, color,
-            self.code, self.method, strip(self.url),
-            strip(self.json_input), strip(self.json_output),
-            tb, new_tb
-        )
+        return "[%s] \033[93m%s\033[0m: %s%d| curl -X %4s %s\033[0m " \
+            "-d '%s' -> '%s'%s%s" % (
+                ftime, self.name, color,
+                self.code, self.method, strip(self.url),
+                strip(self.json_input), strip(self.json_output),
+                tb, new_tb
+            )
 
     def __str__(self):
         return self.render()
@@ -97,9 +101,10 @@ class EventDb:
             while True:
                 try:
                     e = pickle.load(self.db)
-                    yield Event(data = e)
-                except Exception, e:
-                    print "[+] could not pickle.load at offset", self.db.tell(), e
-                    break
+                    yield Event(data=e)
+                except Exception:
+                    print("[+] could not pickle.load at offset",
+                          self.db.tell())
+                    raise
         except EOFError:
             pass

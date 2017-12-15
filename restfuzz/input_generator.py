@@ -1,6 +1,4 @@
-#!/bin/env python
-#
-# Copyright 2015 Red Hat
+# Copyright 2017 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -32,21 +30,24 @@ class InputGenerator(object):
         self.resources = {}
         # Chaos monkey switchs types
         if chaos_monkey:
-            self.once_every = lambda number: random.randint(1, number) == number
+            self.once_every = lambda number: random.randint(
+                1, number) == number
         else:
             self.once_every = lambda dummy: False
 
     def generate(self, input_type, resource_name=None):
         # Call generator
         if input_type not in self.generator_list:
-            raise RuntimeError("Missing generator for input type: %s" % (input_type))
+            raise RuntimeError("Missing generator for input type: %s" %
+                               input_type)
         generator = self.__getattribute__("gen_%s" % input_type)
         if input_type == "resource":
             return generator(resource_name)
         return generator()
 
     def gen_mx(self):
-        return "%d %s" % (random.randint(0, 65535 * 2), self.generate_input("domain"))
+        return "%d %s" % (random.randint(0, 65535 * 2),
+                          self.generate_input("domain"))
 
     def gen_soa(self):
         return "%s %s %d %d %d %d %d" % (
@@ -71,10 +72,12 @@ class InputGenerator(object):
         )
 
     def gen_sshfp(self):
-        return "1 2 aa2df857dc65c5359f02ca75ec5c4308c0100594d931e8d243a42f586257b5e8"
+        return "1 2 " \
+            "aa2df857dc65c5359f02ca75ec5c4308c0100594d931e8d243a42f586257b5e8"
 
     def gen_record_type(self):
-        return random.choice([u'A', u'AAAA', u'CNAME', u'MX', u'TXT', u'SPF', u'SRV', u'PTR', u'SSHFP', u'SOA', u'NS'])
+        return random.choice([u'A', u'AAAA', u'CNAME', u'MX', u'TXT', u'SPF',
+                              u'SRV', u'PTR', u'SSHFP', u'SOA', u'NS'])
 
     def gen_record(self):
         record_type = self.generate_input("record_type")
@@ -94,9 +97,9 @@ class InputGenerator(object):
         try:
             input_type = record_type_generator[record_type]
         except Exception:
-            input_type = random.choice(record_type_generator.values())
+            input_type = random.choice(list(record_type_generator.values()))
         if self.once_every(5):
-            input_type = random.choice(record_type_generator.values())
+            input_type = random.choice(list(record_type_generator.values()))
         records = self.generate_input("list_%s" % input_type)
         return {'type': record_type, 'records': records}
 
@@ -116,20 +119,25 @@ class InputGenerator(object):
         return int(random.random() * 2 ** 64)
 
     def gen_volume_status(self):
-        return random.choice(('creating', 'available', 'attaching', 'in-use', 'deleting', 'error', 'error_deleting', 'backing-up', 'restoring-backup', 'error_restoring', 'error_extending'))
+        return random.choice(('creating', 'available', 'attaching', 'in-use',
+                              'deleting', 'error', 'error_deleting',
+                              'backing-up', 'restoring-backup',
+                              'error_restoring', 'error_extending'))
 
     def gen_hostname(self):
         domain = []
-        for i in xrange(0, random.randint(0, 5)):
+        for i in range(0, random.randint(0, 5)):
             domain.append(
-                ''.join(random.choice(string.letters + string.digits) for _ in range(random.randint(1, 30)))
+                ''.join(random.choice(string.ascii_letters + string.digits)
+                        for _ in range(random.randint(1, 30)))
             )
             domain.append(".")
         return "".join(domain[:-1])
 
     def gen_mail(self):
         return "%s@%s" % (
-            ''.join(random.choice(string.letters + string.digits) for _ in range(random.randint(1, 30))),
+            ''.join(random.choice(string.ascii_letters + string.digits)
+                    for _ in range(random.randint(1, 30))),
             self.generate_input("hostname")
         )
 
@@ -152,7 +160,8 @@ class InputGenerator(object):
         return random.choice(('public', 'private'))
 
     def gen_disk_format(self):
-        return random.choice(('ami', 'ari', 'aki', 'vhd', 'vmdk', 'raw', 'qcow2', 'vdi', 'iso'))
+        return random.choice(('ami', 'ari', 'aki', 'vhd', 'vmdk', 'raw',
+                              'qcow2', 'vdi', 'iso'))
 
     def gen_container_format(self):
         return random.choice(('ami', 'ari', 'aki', 'bare', 'ovf'))
@@ -165,19 +174,20 @@ class InputGenerator(object):
 
     def gen_dict(self):
         d = {}
-        for i in xrange(0, random.randint(1, 30)):
+        for i in range(0, random.randint(1, 30)):
             s = self.gen_string()
             d[str(s)] = self.generate("string")
         return d
 
     def gen_unicode(self):
         chunk = []
-        for i in xrange(random.randint(1, 128)):
+        for i in range(random.randint(1, 128)):
             chunk.append(struct.pack("f", random.random()))
-        return unicode("".join(chunk), errors='ignore')
+        return b"".join(chunk).decode('utf-8', errors='ignore')
 
     def gen_ascii(self):
-        return ''.join(random.choice(string.letters + string.digits) for _ in range(random.randint(1, 512))),
+        return ''.join(random.choice(string.ascii_letters + string.digits)
+                       for _ in range(random.randint(1, 512))),
 
     def gen_string(self):
         if self.once_every(10):
@@ -216,7 +226,8 @@ class InputGenerator(object):
         return random.choice(['dhcpv6-stateful', 'dhcpv6-stateless', 'slaac'])
 
     def gen_allocation_pool(self):
-        return {'start': self.generate_input("ip"), 'end': self.generate_input("ip")}
+        return {'start': self.generate_input("ip"),
+                'end': self.generate_input("ip")}
 
     def gen_mac_address(self):
         return "%02X:%02X:%02X:%02X:%02X:%02X" % (
@@ -288,7 +299,7 @@ class InputGenerator(object):
 
         if is_list:
             result = []
-            for i in xrange(0, random.randint(0, 5)):
+            for i in range(0, random.randint(0, 5)):
                 result.append(self.generate(input_type, resource_name))
         else:
             result = self.generate(input_type, resource_name)
@@ -308,10 +319,11 @@ class InputGenerator(object):
                         params[input_name] = inputs
                     continue
                 if 'required' in v or self.once_every(5):
-                    # If input is required or once in a while, generate input type
+                    # If input is required or once in a while
                     resource_name = None
                     if v['type'] in ('resource', 'list_resource'):
-                        resource_name = v.setdefault('resource_name', input_name)
+                        resource_name = v.setdefault('resource_name',
+                                                     input_name)
                     new_input = self.generate_input(v['type'], resource_name)
                     if "expand" in v and isinstance(new_input, dict):
                         for k, v in new_input.items():

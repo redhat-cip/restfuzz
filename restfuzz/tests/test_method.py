@@ -1,5 +1,3 @@
-#!/bin/env python
-#
 # Copyright 2015 Red Hat
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -17,7 +15,7 @@
 
 import unittest
 import restfuzz
-from cStringIO import StringIO
+from io import StringIO
 
 import restfuzz.method
 from restfuzz.tests.utils import FakeApi
@@ -49,7 +47,8 @@ class MethodTests(unittest.TestCase):
             'name': 'test',
             'url': ['GET', 'list.json'],
             'outputs': {
-                'id': {'type': 'resource', 'json_extract': 'lambda x: x["id"]'},
+                'id': {'type': 'resource',
+                       'json_extract': 'lambda x: x["id"]'},
             }
         }, base_url='http://localhost:8080')
         api = FakeApi(resp_content='{"id": "42"}')
@@ -79,13 +78,17 @@ class MethodTests(unittest.TestCase):
             restfuzz.method.load_yaml(StringIO("base_url: ''"), methods)
         with self.assertRaises(RuntimeError):
             # invalid inputs
-            restfuzz.method.Method({'name': 'test', 'url': ['GET', 'none'], 'inputs': {'test': []}}, base_url='none')
+            restfuzz.method.Method({'name': 'test', 'url': ['GET', 'none'],
+                                    'inputs': {'test': []}}, base_url='none')
         # invalid json extract
-        m = restfuzz.method.Method({
-            'name': 'test',
-            'url': ['GET', 'none'],
-            'inputs': {'net_id': {'type': 'resource', 'required': 'True'}},
-            'outputs': {'test_id': {'type': 'resource', 'json_extract': 'lambda x: typo'}}}, base_url='none)')
+        m = restfuzz.method.Method(
+            {
+                'name': 'test',
+                'url': ['GET', 'none'],
+                'inputs': {'net_id': {'type': 'resource', 'required': 'True'}},
+                'outputs': {'test_id': {'type': 'resource',
+                                        'json_extract': 'lambda x: typo'}}
+            }, base_url='none)')
         self.assertTrue(m.check_requirements({'net_id': 42}))
         self.assertFalse(m.check_requirements({'subnet_id': 42}))
         api = FakeApi(resp_content='{"id": "42"}')
