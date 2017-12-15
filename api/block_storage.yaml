@@ -19,121 +19,121 @@ methods:
     url: ['POST', 'v2/%(tenant_id)s/volumes']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
       volume:
-        availability_zone: {'type': 'string'}
-        source_volid: {'type': 'resource', 'resource_name': 'volume_id'}
-        description: {'type': 'string'}
-        snapshot_id: {'type': 'resource'}
-        size: {'type': 'byte', 'required': 'True'}
-        name: {'type': 'string'}
-        imageRef: {'type': 'resource', 'resource_name': 'image_id'}
-        volume_type: {'type': 'string'}
-        metadata: {'type': 'string'}
+        availability_zone: {'_type': 'string'}
+        source_volid: {'_type': 'resource', 'resource_name': 'volume_id'}
+        description: {'_type': 'string'}
+        snapshot_id: {'_type': 'resource'}
+        size: {'_type': 'byte', 'required': 'True'}
+        name: {'_type': 'string'}
+        imageRef: {'_type': 'resource', 'resource_name': 'image_id'}
+        volume_type: {'_type': 'string'}
+        metadata: {'_type': 'string'}
     outputs:
-      volume_id: {'json_extract': 'lambda x: x["volume"]["id"]', 'type': 'resource'}
-      snapshot_id: {'json_extract': 'lambda x: x["volume"]["snapshot_id"]', 'type': 'resource'}
+      volume_id: {'json_extract': 'lambda x: x["volume"]["id"]', '_type': 'resource'}
+      snapshot_id: {'json_extract': 'lambda x: x["volume"]["snapshot_id"]', '_type': 'resource'}
 
   - name: 'volume_list'
     url: ['GET', 'v2/%(tenant_id)s/volumes']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-      sort: {'type': 'string'}
-      limit: {'type': 'integer'}
-      marker: {'type': 'string'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+      sort: {'_type': 'string'}
+      limit: {'_type': 'integer'}
+      marker: {'_type': 'string'}
     outputs:
-        volume_id: {'json_extract': 'lambda x: [i["id"] for i in x["volumes"]]', 'type': 'resource'}
+        volume_id: {'json_extract': 'lambda x: [i["id"] for i in x["volumes"]]', '_type': 'resource'}
 
   - name: 'volume_update'
     url: ['PUT', 'v2/%(tenant_id)s/volumes/%(volume_id)s']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_id: {'_type': 'resource', 'required': 'True'}
 
   - name: 'volume_delete'
     url: ['DELETE', 'v2/%(tenant_id)s/volumes/%(volume_id)s']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_id: {'_type': 'resource', 'required': 'True'}
 
 
   - name: 'volume_extend'
     url: ['POST', 'v2/%(tenant_id)s/volumes/%(volume_id)s/action']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_id: {'_type': 'resource', 'required': 'True'}
       os-extend:
-        new_size: {'type': 'byte'}
+        new_size: {'_type': 'byte'}
 
   - name: 'volume_reset_status'
     url: ['POST', 'v2/%(tenant_id)s/volumes/%(volume_id)s/action']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_id: {'_type': 'resource', 'required': 'True'}
       os-reset_status:
-        status: {'type': 'volume_status'}
-        attach_status: {'type': 'string'}
-        migration_status: {'type': 'string'}
+        status: {'_type': 'volume_status'}
+        attach_status: {'_type': 'string'}
+        migration_status: {'_type': 'string'}
 
   - name: 'volume_image_metadata'
     url: ['POST', 'v2/%(tenant_id)s/volumes/%(volume_id)s/action']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_id: {'_type': 'resource', 'required': 'True'}
       os-set_image_metadata:
         metadata:
-          image_id: {'type': 'resource'}
-          image_name: {'type': 'string'}
-          kernel_id: {'type': 'string'}
-          ramdisk_id: {'type': 'string'}
+          image_id: {'_type': 'resource'}
+          image_name: {'_type': 'string'}
+          kernel_id: {'_type': 'string'}
+          ramdisk_id: {'_type': 'string'}
 
   - name: 'volume_image_remove_metadata'
     url: ['POST', 'v2/%(tenant_id)s/volumes/%(volume_id)s/action']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_id: {'_type': 'resource', 'required': 'True'}
       os-unset_image_metadata:
-        key: {'type': 'string'}
+        key: {'_type': 'string'}
 
   - name: 'volume_types_list'
     url: ['GET', 'v2/%(tenant_id)s/types']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
     outputs:
-      volume_type_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["volume_types"]]'}
+      volume_type_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["volume_types"]]'}
 
   - name: 'volume_types_create'
     url: ['POST', 'v2/%(tenant_id)s/types']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
       volume_type:
-        name: {'type': 'string'}
-        extra_specs: {'type': 'dict'}
+        name: {'_type': 'string'}
+        extra_specs: {'_type': 'dict'}
     outputs:
-      volume_type_id: {'type': 'resource', 'json_extract': 'lambda x: x["volume_type"]["id"]'}
+      volume_type_id: {'_type': 'resource', 'json_extract': 'lambda x: x["volume_type"]["id"]'}
 
   - name: 'volume_types_update'
     url: ['PUT', 'v2/%(tenant_id)s/types/%(volume_type_id)s']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_type_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_type_id: {'_type': 'resource', 'required': 'True'}
       volume_type:
-        name: {'type': 'string'}
-        extra_specs: {'type': 'dict'}
+        name: {'_type': 'string'}
+        extra_specs: {'_type': 'dict'}
 
   - name: 'volume_types_delete'
     url: ['DELETE', 'v2/%(tenant_id)s/types/%(volume_type_id)s']
     inputs:
       url_input:
-        tenant_id: {'type': 'resource', 'required': 'True'}
-        volume_type_id: {'type': 'resource', 'required': 'True'}
+        tenant_id: {'_type': 'resource', 'required': 'True'}
+        volume_type_id: {'_type': 'resource', 'required': 'True'}

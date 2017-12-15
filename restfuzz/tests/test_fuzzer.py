@@ -43,7 +43,7 @@ class FuzzerTests(unittest.TestCase):
                 'name': 'update',
                 'url': ['PUT', '%(resource_id)s.json'],
                 'inputs': {'url_input': {
-                    'resource_id': {'type': 'resource', 'required': 'True'}}}
+                    'resource_id': {'_type': 'resource', 'required': 'True'}}}
             }, base_url='http://localhost')
         }
         api = FakeApi(resp_code=404)
@@ -60,7 +60,7 @@ class FuzzerTests(unittest.TestCase):
                 'name': 'delete',
                 'url': ['DELETE', '%(resource_id)s.json'],
                 'inputs': {'url_input': {
-                    'resource_id': {'type': 'resource', 'required': 'True'}}}
+                    'resource_id': {'_type': 'resource', 'required': 'True'}}}
             }, base_url='http://localhost')
         }
         api = FakeApi(resp_code=200)
@@ -74,13 +74,14 @@ class FuzzerTests(unittest.TestCase):
             'resource_list': restfuzz.method.Method({
                 'name': 'resource_list',
                 'url': ['GET', 'list.json'],
-                'outputs': {'resource_id': {'type': 'resource', 'json_extract':
-                                            'lambda x: [i["id"] for i in x]'}}
+                'outputs': {'resource_id': {
+                    '_type': 'resource',
+                    'json_extract': 'lambda x: [i["id"] for i in x]'}}
             }, base_url='http://localhost'),
             'delete': restfuzz.method.Method({
                 'name': 'delete',
                 'url': ['DELETE', '%(resource_id)s.json'],
-                'inputs': {'url_input': {'resource_id': {'type': 'resource',
+                'inputs': {'url_input': {'resource_id': {'_type': 'resource',
                                                          'required': 'True'}}}
             }, base_url='http://localhost')
         }

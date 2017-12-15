@@ -18,241 +18,241 @@ methods:
   - name: 'network_list'
     url: ['GET', 'v2.0/networks.json']
     outputs:
-      network_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["networks"]]'}
+      network_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["networks"]]'}
 
   - name: 'subnet_list'
     url: ['GET', 'v2.0/subnets.json']
     outputs:
-      subnet_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["subnets"]]'}
+      subnet_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["subnets"]]'}
 
   - name: 'port_list'
     url: ['GET', 'v2.0/ports.json']
     outputs:
-      port_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["ports"]]'}
+      port_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["ports"]]'}
 
   - name: 'router_list'
     url: ['GET', 'v2.0/routers.json']
     outputs:
-      router_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["routers"]]'}
+      router_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["routers"]]'}
 
   - name: 'security_group_list'
     url: ['GET', 'v2.0/security-groups.json']
     outputs:
-      security_group_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["security_groups"]]'}
-      security_group_rule_id: {'type': 'resource', 'json_extract': 'lambda x: [j["id"] for j in list(itertools.chain.from_iterable([i["security_group_rules"] for i in x["security_groups"]]))]'}
+      security_group_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["security_groups"]]'}
+      security_group_rule_id: {'_type': 'resource', 'json_extract': 'lambda x: [j["id"] for j in list(itertools.chain.from_iterable([i["security_group_rules"] for i in x["security_groups"]]))]'}
       # this unpack: {'security_groups': [{'security_group_rules': [{'id': 'aaaa-aa-aa'}, {'id': 'bbbb-bb-bb'}]}, {'security_group_rules': [{'id': 'cccc-cc-cc'}]}]}
       # into: ['aaaa-aa-aa', 'bbbb-bb-bb', 'cccc-cc-cc']
 
   - name: 'floating_list'
     url: ['GET', 'v2.0/floatingips']
     outputs:
-      floating_id: {'type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["floatingips"]]'}
+      floating_id: {'_type': 'resource', 'json_extract': 'lambda x: [i["id"] for i in x["floatingips"]]'}
 
   - name: 'floating_create'
     url: ['POST', 'v2.0/floatingips']
     inputs:
       floatingip:
-        tenant_id: {'type': 'resource'}
-        floating_network_id: {'type': 'resource', 'resource_name': 'network_id', 'required': 'True'}
-        fixed_ip_address: {'type': 'ip'}
-        floating_ip_address: {'type': 'ip'}
-        port_id: {'type': 'resource'}
+        tenant_id: {'_type': 'resource'}
+        floating_network_id: {'_type': 'resource', 'resource_name': 'network_id', 'required': 'True'}
+        fixed_ip_address: {'_type': 'ip'}
+        floating_ip_address: {'_type': 'ip'}
+        port_id: {'_type': 'resource'}
     outputs:
-      floating_id: {'type': 'resource', 'json_extract': 'lambda x: x["floatingip"]["id"]'}
+      floating_id: {'_type': 'resource', 'json_extract': 'lambda x: x["floatingip"]["id"]'}
 
   - name: 'floating_update'
     url: ['PUT', 'v2.0/floatingips/%(floating_id)s']
     inputs:
       url_input:
-        floating_id: {'type': 'resource', 'required': 'True'}
+        floating_id: {'_type': 'resource', 'required': 'True'}
       floatingip:
-        port_id: {'type': 'resource'}
+        port_id: {'_type': 'resource'}
 
   - name: 'floating_delete'
     url: ['DELETE', 'v2.0/floatingips/%(floating_id)s']
     inputs:
       url_input:
-        floating_id: {'type': 'resource', 'required': 'True'}
+        floating_id: {'_type': 'resource', 'required': 'True'}
 
   - name: 'network_create'
     url: ['POST', 'v2.0/networks.json']
     inputs:
       network:
-        name: {'required': 'True', 'type': 'string'}
-        admin_state_up: {'type': 'bool'}
-        tenant_id: {'type': 'resource'}
-        vlan_transparent: {'type': 'bool'}
+        name: {'required': 'True', '_type': 'string'}
+        admin_state_up: {'_type': 'bool'}
+        tenant_id: {'_type': 'resource'}
+        vlan_transparent: {'_type': 'bool'}
     outputs:
-      network_id: {'json_extract': 'lambda x: x["network"]["id"]', 'type': 'resource'}
+      network_id: {'json_extract': 'lambda x: x["network"]["id"]', '_type': 'resource'}
 
   - name: 'network_update'
     url: ['PUT', 'v2.0/networks/%(network_id)s.json']
     inputs:
       url_input:
-        network_id: {'required': True, 'type': 'resource'}
+        network_id: {'required': True, '_type': 'resource'}
       network:
-        admin_state_up: {'type': 'bool'}
-        vlan_transparent: {'type': 'bool'}
+        admin_state_up: {'_type': 'bool'}
+        vlan_transparent: {'_type': 'bool'}
 
 
   - name: 'subnet_create'
     url: ['POST', 'v2.0/subnets.json']
     inputs:
       subnet:
-        ip_version: {'required': True, 'type': 'ip_version'}
-        network_id: {'required': True, 'type': 'resource'}
-        cidr: {'required': True, 'type': 'cidr'}
-        tenant_id: {'type': 'resource'}
+        ip_version: {'required': True, '_type': 'ip_version'}
+        network_id: {'required': True, '_type': 'resource'}
+        cidr: {'required': True, '_type': 'cidr'}
+        tenant_id: {'_type': 'resource'}
 
-        name: {'type': 'string'}
-        gateway_ip: {'type': 'ip'}
-        allocation_pools: {'type': 'allocation_pool'}
-        dns_nameservers: {'type': 'list_ip'}
-        host_routes: {'type': 'list_hostroute'}
-        enable_dhcp: {'type': 'bool'}
-        ipv6_ra_mode: {'type': 'ipv6_mode'}
-        ipv6_address_mode: {'type': 'ipv6_mode'}
+        name: {'_type': 'string'}
+        gateway_ip: {'_type': 'ip'}
+        allocation_pools: {'_type': 'allocation_pool'}
+        dns_nameservers: {'_type': 'list_ip'}
+        host_routes: {'_type': 'list_hostroute'}
+        enable_dhcp: {'_type': 'bool'}
+        ipv6_ra_mode: {'_type': 'ipv6_mode'}
+        ipv6_address_mode: {'_type': 'ipv6_mode'}
     outputs:
-      subnet_id: {'json_extract': 'lambda x: x["subnet"]["id"]', 'type': 'resource'}
+      subnet_id: {'json_extract': 'lambda x: x["subnet"]["id"]', '_type': 'resource'}
 
   - name: 'subnet_update'
     url: ['PUT', 'v2.0/subnets/%(subnet_id)s.json']
     inputs:
       url_input:
-        subnet_id: {'required': True, 'type': 'resource'}
+        subnet_id: {'required': True, '_type': 'resource'}
       subnet:
-        name: {'type': 'string'}
-        gateway_ip: {'type': 'ip'}
-        allocation_pools: {'type': 'allocation_pool'}
-        dns_nameservers: {'type': 'list_ip'}
-        host_routes: {'type': 'list_hostroute'}
-        enable_dhcp: {'type': 'bool'}
-        ipv6_ra_mode: {'type': 'ipv6_mode'}
-        ipv6_address_mode: {'type': 'ipv6_mode'}
+        name: {'_type': 'string'}
+        gateway_ip: {'_type': 'ip'}
+        allocation_pools: {'_type': 'allocation_pool'}
+        dns_nameservers: {'_type': 'list_ip'}
+        host_routes: {'_type': 'list_hostroute'}
+        enable_dhcp: {'_type': 'bool'}
+        ipv6_ra_mode: {'_type': 'ipv6_mode'}
+        ipv6_address_mode: {'_type': 'ipv6_mode'}
 
   - name: 'network_delete'
     url: ['DELETE', 'v2.0/networks/%(network_id)s.json']
     inputs:
       url_input:
-        network_id: {'required': True, 'type': 'resource'}
+        network_id: {'required': True, '_type': 'resource'}
 
   - name: 'subnet_delete'
     url: ['DELETE', 'v2.0/subnets/%(subnet_id)s.json']
     inputs:
       url_input:
-        subnet_id: {'required': True, 'type': 'resource'}
+        subnet_id: {'required': True, '_type': 'resource'}
 
   - name: 'port_create'
     url: ['POST', 'v2.0/ports.json']
     inputs:
       port:
-        name: {'type': 'string'}
-        network_id: {'required': True, 'type': 'resource'}
-        admin_state_up: {'type': 'bool'}
-        mac_address: {'type': 'mac_address'}
-        fixed_ips: {'type': 'list_fixed_ip'}
-        device_id: {'type': 'string'}
-        device_owner: {'type': 'string'}
-        tenant_id: {'type': 'resource'}
-        ip_address: {'type': 'ip'}
-        security_groups: {'type': 'list_resource', 'resource_name': 'security_group_id'}
-        allowed_address_pairs: {'type': 'list_address_pair'}
-        opt_value: {'type': 'string'}
-        opt_name: {'type': 'string'}
+        name: {'_type': 'string'}
+        network_id: {'required': True, '_type': 'resource'}
+        admin_state_up: {'_type': 'bool'}
+        mac_address: {'_type': 'mac_address'}
+        fixed_ips: {'_type': 'list_fixed_ip'}
+        device_id: {'_type': 'string'}
+        device_owner: {'_type': 'string'}
+        tenant_id: {'_type': 'resource'}
+        ip_address: {'_type': 'ip'}
+        security_groups: {'_type': 'list_resource', 'resource_name': 'security_group_id'}
+        allowed_address_pairs: {'_type': 'list_address_pair'}
+        opt_value: {'_type': 'string'}
+        opt_name: {'_type': 'string'}
     outputs:
-      port_id: {'json_extract': 'lambda x: x["port"]["id"]', 'type': 'resource'}
+      port_id: {'json_extract': 'lambda x: x["port"]["id"]', '_type': 'resource'}
 
   - name: 'port_update'
     url: ['PUT', 'v2.0/ports/%(port_id)s.json']
     inputs:
       url_input:
-        port_id: {'required': True, 'type': 'resource'}
+        port_id: {'required': True, '_type': 'resource'}
       port:
-        subnet_id:  {'type': 'resource'}
-        admin_state_up: {'type': 'bool'}
-        fixed_ips: {'type': 'list_fixed_ip'}
-        security_groups: {'type': 'list_resource', 'resource_name': 'security_group_id'}
-        ip_address: {'type': 'ip'}
-        opt_value: {'type': 'string'}
-        opt_name: {'type': 'string'}
-        allowed_address_pairs: {'type': 'list_address_pair'}
+        subnet_id:  {'_type': 'resource'}
+        admin_state_up: {'_type': 'bool'}
+        fixed_ips: {'_type': 'list_fixed_ip'}
+        security_groups: {'_type': 'list_resource', 'resource_name': 'security_group_id'}
+        ip_address: {'_type': 'ip'}
+        opt_value: {'_type': 'string'}
+        opt_name: {'_type': 'string'}
+        allowed_address_pairs: {'_type': 'list_address_pair'}
 
   - name: 'port_delete'
     url: ['DELETE', 'v2.0/ports/%(port_id)s.json']
     inputs:
       url_input:
-        port_id: {'required': True, 'type': 'resource'}
+        port_id: {'required': True, '_type': 'resource'}
 
 
   - name: 'router_create'
     url: ['POST', 'v2.0/routers.json']
     inputs:
       router:
-        name: {'required': True, 'type': 'string'}
-        admin_state_up: {'type': 'bool'}
-        #external_gateway_info: {'type': 'resource', 'resource_name': 'network_id'}
+        name: {'required': True, '_type': 'string'}
+        admin_state_up: {'_type': 'bool'}
+        #external_gateway_info: {'_type': 'resource', 'resource_name': 'network_id'}
     outputs:
-      router_id: {'json_extract': 'lambda x: x["router"]["id"]', 'type': 'resource'}
+      router_id: {'json_extract': 'lambda x: x["router"]["id"]', '_type': 'resource'}
 
   - name: 'router_delete'
     url: ['DELETE', 'v2.0/routers/%(router_id)s.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
 
   - name: 'router_update'
     url: ['PUT', 'v2.0/routers/%(router_id)s.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
       router:
-        name: {'type': 'string'}
-        admin_state_up: {'type': 'bool'}
-        #external_gateway_info: {'type': 'resource', 'resource_name': 'network_id'}
-        routes: {'type': 'list_hostroute'}
+        name: {'_type': 'string'}
+        admin_state_up: {'_type': 'bool'}
+        #external_gateway_info: {'_type': 'resource', 'resource_name': 'network_id'}
+        routes: {'_type': 'list_hostroute'}
 
   - name: 'router_interface_add_port'
     url: ['PUT', 'v2.0/routers/%(router_id)s/add_router_interface.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
-      port_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
+      port_id: {'required': True, '_type': 'resource'}
 
   - name: 'router_interface_add_subnet'
     url: ['PUT', 'v2.0/routers/%(router_id)s/add_router_interface.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
-      subnet_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
+      subnet_id: {'required': True, '_type': 'resource'}
 
   - name: 'router_interface_delete_port'
     url: ['PUT', 'v2.0/routers/%(router_id)s/remove_router_interface.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
-      port_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
+      port_id: {'required': True, '_type': 'resource'}
 
   - name: 'router_interface_delete_subnet'
     url: ['PUT', 'v2.0/routers/%(router_id)s/remove_router_interface.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
-      subnet_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
+      subnet_id: {'required': True, '_type': 'resource'}
 
   - name: 'router_gateway_set'
     url: ['PUT',  'v2.0/routers/%(router_id)s.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
       router:
         external_gateway_info:
-          network_id: {'required': True, 'type': 'resource'}
+          network_id: {'required': True, '_type': 'resource'}
 
   - name: 'router_gateway_clear'
     url: ['PUT',  'v2.0/routers/%(router_id)s.json']
     inputs:
       url_input:
-        router_id: {'required': True, 'type': 'resource'}
+        router_id: {'required': True, '_type': 'resource'}
       router:
         external_gateway_info: {}
 
@@ -260,42 +260,42 @@ methods:
     url: ['POST', 'v2.0/security-groups.json']
     inputs:
       security_group:
-        name: {'required': True, 'type': 'string'}
+        name: {'required': True, '_type': 'string'}
     outputs:
-      security_group_id: {'json_extract': 'lambda x: x["security_group"]["id"]', 'type': 'resource'}
+      security_group_id: {'json_extract': 'lambda x: x["security_group"]["id"]', '_type': 'resource'}
 
   - name: 'security_group_update'
     url: ['PUT', 'v2.0/security-groups/%(security_group_id)s.json']
     inputs:
       url_input:
-        security_group_id: {'required': True, 'type': 'resource'}
+        security_group_id: {'required': True, '_type': 'resource'}
       security_group:
-        description: {'type': 'string'}
-        name: {'type': 'string'}
+        description: {'_type': 'string'}
+        name: {'_type': 'string'}
 
   - name: 'security_group_rule_create'
     url: ['POST', 'v2.0/security-group-rules.json']
     inputs:
-      security_group_rule: 
-        direction: {'required': True, 'type': 'net_direction'}
-        ethertype: {'type': 'ethertype'}
-        security_group_id: {'required': True, 'type': 'resource'}
-        port_range_min: {'type': 'port'}
-        port_range_max: {'type': 'port'}
-        protocol: {'type': 'net_protocol'}
-        remote_group_id: {'type': 'resource', 'resource_name': 'security_group_id'}
-        remote_ip_prefix: {'type': 'cidr'}
+      security_group_rule:
+        direction: {'required': True, '_type': 'net_direction'}
+        ethertype: {'_type': 'ethertype'}
+        security_group_id: {'required': True, '_type': 'resource'}
+        port_range_min: {'_type': 'port'}
+        port_range_max: {'_type': 'port'}
+        protocol: {'_type': 'net_protocol'}
+        remote_group_id: {'_type': 'resource', 'resource_name': 'security_group_id'}
+        remote_ip_prefix: {'_type': 'cidr'}
     outputs:
-      security_group_rule_id: {'json_extract': 'lambda x: x["security_group_rule"]["id"]', 'type': 'resource'}
+      security_group_rule_id: {'json_extract': 'lambda x: x["security_group_rule"]["id"]', '_type': 'resource'}
 
   - name: 'security_group_rule_delete'
     url: ['DELETE', 'v2.0/security-group-rules/%(security_group_rule_id)s.json']
     inputs:
       url_input:
-        security_group_rule_id: {'type': 'resource'}
+        security_group_rule_id: {'_type': 'resource'}
 
   - name: 'security_group_delete'
     url: ['DELETE', 'v2.0/security-groups/%(security_group_id)s.json']
     inputs:
       url_input:
-        security_group_id: {'required': True, 'type': 'resource'}
+        security_group_id: {'required': True, '_type': 'resource'}

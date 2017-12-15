@@ -36,7 +36,7 @@ class Method:
         self.requires = set()
         self.produces = set()
         for k, v in self.iter_inputs():
-            if v['type'] in ('resource', 'list_resource'):
+            if v['_type'] in ('resource', 'list_resource'):
                 self.requires.add(v.setdefault('resource_name', k))
 
         for k, v in self.outputs.items():
@@ -52,11 +52,11 @@ class Method:
             raise RuntimeError(
                 "%s: Missing type in input/output description" % data_set)
         for k, v in data_set.items():
-            if 'type' in v:
+            if '_type' in v:
                 yield (k, v)
             else:
                 for k2, v2 in self.iter_inputs(v):
-                    if 'type' in v2:
+                    if '_type' in v2:
                         yield (k2, v2)
 
     def check_requirements(self, resources):

@@ -101,7 +101,7 @@ class InputGenerator(object):
         if self.once_every(5):
             input_type = random.choice(list(record_type_generator.values()))
         records = self.generate_input("list_%s" % input_type)
-        return {'type': record_type, 'records': records}
+        return {'_type': record_type, 'records': records}
 
     def gen_zone_type(self):
         return random.choice([u'PRIMARY', u'SECONDARY'])
@@ -312,7 +312,7 @@ class InputGenerator(object):
         def walk_inputs(data_set, params):
             # For each input
             for input_name, v in data_set.items():
-                if 'type' not in v:
+                if '_type' not in v:
                     # If not an input definition, recurse object
                     inputs = walk_inputs(v, {})
                     if inputs:
@@ -321,10 +321,10 @@ class InputGenerator(object):
                 if 'required' in v or self.once_every(5):
                     # If input is required or once in a while
                     resource_name = None
-                    if v['type'] in ('resource', 'list_resource'):
+                    if v['_type'] in ('resource', 'list_resource'):
                         resource_name = v.setdefault('resource_name',
                                                      input_name)
-                    new_input = self.generate_input(v['type'], resource_name)
+                    new_input = self.generate_input(v['_type'], resource_name)
                     if "expand" in v and isinstance(new_input, dict):
                         for k, v in new_input.items():
                             params[k] = v

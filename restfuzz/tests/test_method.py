@@ -36,7 +36,7 @@ class MethodTests(unittest.TestCase):
         method = restfuzz.method.Method({
             'name': 'test',
             'url': ['POST', 'create.json'],
-            'inputs': {'name': {'type': 'string'}}
+            'inputs': {'name': {'_type': 'string'}}
         }, base_url='http://localhost:8080')
         api = FakeApi()
         event = method.call(api, params={'name': 'test_name'})
@@ -47,7 +47,7 @@ class MethodTests(unittest.TestCase):
             'name': 'test',
             'url': ['GET', 'list.json'],
             'outputs': {
-                'id': {'type': 'resource',
+                'id': {'_type': 'resource',
                        'json_extract': 'lambda x: x["id"]'},
             }
         }, base_url='http://localhost:8080')
@@ -61,7 +61,7 @@ class MethodTests(unittest.TestCase):
             'name': 'test',
             'url': ['PUT', '%(test)s.json'],
             'inputs': {
-                'url_input': {'test': {'type': 'string'}}
+                'url_input': {'test': {'_type': 'string'}}
             }
         }, base_url='http://localhost:8080')
         api = FakeApi(resp_content='{"id": "42"}')
@@ -85,8 +85,9 @@ class MethodTests(unittest.TestCase):
             {
                 'name': 'test',
                 'url': ['GET', 'none'],
-                'inputs': {'net_id': {'type': 'resource', 'required': 'True'}},
-                'outputs': {'test_id': {'type': 'resource',
+                'inputs': {'net_id': {'_type': 'resource',
+                                      'required': 'True'}},
+                'outputs': {'test_id': {'_type': 'resource',
                                         'json_extract': 'lambda x: typo'}}
             }, base_url='none)')
         self.assertTrue(m.check_requirements({'net_id': 42}))

@@ -37,14 +37,15 @@ class InputGeneratorTests(unittest.TestCase):
         for method in methods.values():
             for k, v in method.iter_inputs():
                 self.assertIsNotNone(
-                    ig.generate_input(v["type"])
+                    ig.generate_input(v["_type"])
                 )
 
     def test_generate_inputs(self):
         method = restfuzz.method.Method({
             'name': 'test',
             'url': ['POST', 'create.json'],
-            'inputs': {'obj': {'name': {'type': 'string', 'required': 'True'}}}
+            'inputs': {'obj': {'name': {'_type': 'string',
+                                        'required': 'True'}}}
         }, base_url='http://localhost:8080')
         ig = restfuzz.input_generator.InputGenerator()
         params = ig.generate_inputs(method.inputs)
@@ -79,7 +80,7 @@ class InputGeneratorTests(unittest.TestCase):
         method = restfuzz.method.Method({
             'name': 'update',
             'url': ['PUT', 'put.json'],
-            'inputs': {'id': {'type': 'resource', 'required': 'True'}}
+            'inputs': {'id': {'_type': 'resource', 'required': 'True'}}
         }, base_url='http://localhost:8080')
         params = ig.generate_inputs(method.inputs)
         self.assertTrue(params['id'] in ('42', '43'))
@@ -89,9 +90,9 @@ class InputGeneratorTests(unittest.TestCase):
         method = restfuzz.method.Method({
             'name': 'test',
             'url': ['POST', 'create.json'],
-            'inputs': {'obj': {'name': {'type': 'record', 'expand': 'True',
+            'inputs': {'obj': {'name': {'_type': 'record', 'expand': 'True',
                                         'required': 'True'}}}
         }, base_url='http://localhost:8080')
         params = ig.generate_inputs(method.inputs)
-        self.assertTrue("type" in params['obj'])
+        self.assertTrue("_type" in params['obj'])
         self.assertTrue("records" in params['obj'])
