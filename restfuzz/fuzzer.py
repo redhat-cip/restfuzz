@@ -71,6 +71,7 @@ class ApiRandomCaller:
     def sync_resources(self):
         # Refresh internal resources list
         tenant_id = self.ig.resources.setdefault('tenant_id', None)
+        print("[+] Syncing resources...")
         self.ig.resources_clear()
         if tenant_id:
             self.ig.resources["tenant_id"] = tenant_id
@@ -85,3 +86,5 @@ class ApiRandomCaller:
                 continue
             # Adds output to resources
             self.ig.resources_add(event.outputs)
+        for k, v in self.ig.resources.items():
+            print("->", k, v)

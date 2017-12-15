@@ -28,6 +28,8 @@ class Method:
         self.name = kwarg['name']
         self.http_method = kwarg['url'][0]
         self.url = kwarg['url'][1]
+        if self.url[0] == "/":
+            self.url = self.url[1:]
         self.inputs = kwarg.setdefault('inputs', {})
         self.outputs = kwarg.setdefault('outputs', {})
         self.enabled = True
@@ -124,19 +126,23 @@ class Method:
         return "<Method(%s)>" % (self.name)
 
 
-def load_yaml(fobj, methods):
+def load_yaml(fobj, methods, base_url=None):
     # Store methods in methods dictionary
     d = yaml.load(fobj)
+    if base_url is not None:
+        d["base_url"] = base_url
     if not d or "base_url" not in d or "methods" not in d:
         raise RuntimeError("Invalid yaml...")
     for method in d['methods']:
         m = Method(method, d['base_url'])
         if m.name in methods:
-            raise RuntimeError("Duplicate method name '%s'" % m.name)
+            print("Skipping duplicate method name %s" % m.name)
+            continue
+            # raise RuntimeError("Duplicate method name '%s'" % m.name)
         methods[m.name] = m
 
 
-def load_methods(folder_or_file):
+def load_methods(folder_or_file, base_url=None):
     files = []
     if os.path.isdir(folder_or_file):
         for fname in filter(lambda d: d.endswith('.yaml'),
@@ -149,5 +155,8 @@ def load_methods(folder_or_file):
 
     methods = {}
     for fname in files:
-        load_yaml(open(fname), methods)
+        try:
+            load_yaml(open(fname), methods, base_url)
+        except Exception:
+            print("Couldn't load %s" % fname)
     return methods

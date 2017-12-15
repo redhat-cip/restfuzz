@@ -26,8 +26,9 @@ from restfuzz.event import EventDb
 
 def do_restfuzz():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--api", nargs='+', metavar="file_or_dir",
+    parser.add_argument("--api", action="append", metavar="file_or_dir",
                         help="Api description", required=True)
+    parser.add_argument("--base_url", help="The base url")
     parser.add_argument("--token", help="X-Auth-Token to use")
     parser.add_argument("--tenant_id", nargs='+', default=[],
                         help="Adds tenant ids")
@@ -50,7 +51,7 @@ def do_restfuzz():
 
     methods = {}
     for api in args.api:
-        api_methods = method.load_methods(api)
+        api_methods = method.load_methods(api, args.base_url)
         methods.update(api_methods)
 
     api = Api()
@@ -80,11 +81,8 @@ def do_restfuzz():
 
     if "OS_USERNAME" in os.environ and not args.token:
         refresh_keystone_token()
-
-    print("[+] Syncing resources...")
-    fuzzer.sync_resources()
-    for k, v in fuzzer.ig.resources.items():
-        print("->", k, v)
+    else:
+        fuzzer.sync_resources()
 
     stats = {
         "total": 0,
