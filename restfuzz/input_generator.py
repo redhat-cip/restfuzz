@@ -318,7 +318,8 @@ class InputGenerator(object):
                     if inputs:
                         params[input_name] = inputs
                     continue
-                if 'required' in v or self.once_every(5):
+
+                if v.get('required') or self.once_every(5):
                     # If input is required or once in a while
                     resource_name = None
                     if v['_type'] in ('resource', 'list_resource'):

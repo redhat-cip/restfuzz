@@ -22,12 +22,15 @@ from restfuzz import method
 from restfuzz.api import Api
 from restfuzz.fuzzer import ApiRandomCaller
 from restfuzz.event import EventDb
+from restfuzz.os_api_ref_importer import OsApiRefFile
 
 
 def do_restfuzz():
     parser = argparse.ArgumentParser()
     parser.add_argument("--api", action="append", metavar="file_or_dir",
                         help="Api description", required=True)
+    parser.add_argument("--os-api", action="append", metavar="file_or_dir",
+                        help="Os-Api-Ref documentation", required=True)
     parser.add_argument("--base_url", help="The base url")
     parser.add_argument("--method", action="append",
                         help="Only fuzz this method.")
@@ -55,6 +58,10 @@ def do_restfuzz():
     for api in args.api:
         api_methods = method.load_methods(api, args.base_url)
         methods.update(api_methods)
+
+    for os_api in args.os_api:
+        osapiref = OsApiRefFile(os_api)
+        methods.update(osapiref.render())
 
     api = Api()
     if args.token:

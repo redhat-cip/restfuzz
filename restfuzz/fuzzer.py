@@ -79,7 +79,7 @@ class ApiRandomCaller:
         if tenant_id:
             self.ig.resources["tenant_id"] = tenant_id
         for name, method in self.methods.items():
-            if not name.endswith("_list"):
+            if not name.endswith("_list") and not name.startswith("list_"):
                 continue
             try:
                 event = method.call(self.api)
