@@ -29,6 +29,8 @@ def do_restfuzz():
     parser.add_argument("--api", action="append", metavar="file_or_dir",
                         help="Api description", required=True)
     parser.add_argument("--base_url", help="The base url")
+    parser.add_argument("--method", action="append",
+                        help="Only fuzz this method.")
     parser.add_argument("--token", help="X-Auth-Token to use")
     parser.add_argument("--tenant_id", nargs='+', default=[],
                         help="Adds tenant ids")
@@ -92,7 +94,7 @@ def do_restfuzz():
     while (stats["total"] < args.max_events and
            (time.monotonic() - stats["start_time"]) < args.max_time):
         new_traceback = False
-        event = fuzzer.step(args.debug)
+        event = fuzzer.step(args.debug, args.method)
         if event is None:
             continue
         if health:

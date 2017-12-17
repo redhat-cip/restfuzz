@@ -48,15 +48,18 @@ class ApiRandomCaller:
         self.ig.resources_add(event.outputs)
         return event
 
-    def step(self, ask_before_call=False):
+    def step(self, ask_before_call=False, method_names=None):
         random.shuffle(self.methods_list)
         # Pick a callable method
         for method in self.methods_list:
             if not method.enabled:
                 continue
+            if method_names is not None and \
+               not [True for name in method_names if method.name == name]:
+                continue
             # Tries to avoid delete and list
-            if (method.http_method != 'DELETE' and
-               not method.name.endswith('_list')) or self.ig.once_every(100):
+            if method.http_method not in ('GET', 'DELETE') or \
+               self.ig.once_every(200):
                 break
         if not method.enabled:
             print("Couldn't find a working method, abort")
